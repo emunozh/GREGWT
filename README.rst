@@ -58,7 +58,9 @@ Two datasets are provided in this package.
 
        data("GREGWT.census")
 
-2. A reformatted version of the scientific data file from the micro-census 2010
-   (GREGWT.survey)::
+2. A reformatted version of the public available micro-census of year 2010
+    This survey data contains (10179) records and corresponds to the (3%)
+    of the official micro census data for scientific use (1% of the total
+    German population). (GREGWT.survey)::
 
        data("GREGWT.survey")
