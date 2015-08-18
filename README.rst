@@ -49,18 +49,25 @@ Prepare a survey to be used by an agent based simulation model::
     Synthetic.pop <- Synthetize(data_in=Weights.GREGWT)
 
 
-Data:
------
+Data
+----
 
 Two datasets are provided in this package. 
 
 1. Census data from 2011 aggregated to municipalities. (GREGWT.census)::
 
        data("GREGWT.census")
+   
+   Original data set downloaded from:
+   https://ergebnisse.zensus2011.de
 
 2. A reformatted version of the public available micro-census of year 2010
-    This survey data contains (10179) records and corresponds to the (3%)
-    of the official micro census data for scientific use (1% of the total
-    German population). (GREGWT.survey)::
+   (CAMPUS-File)
+   This survey data contains (10179) records and corresponds to the (3.5%)
+   of the official micro census data for scientific use (1% of the total
+   German population). (GREGWT.survey)::
 
        data("GREGWT.survey")
+
+   Original data set downloaded from:
+   http://www.forschungsdatenzentrum.de/bestand/mikrozensus/cf/2010/fdz_mikrozensus_cf_2010_ascii-csv.zip
