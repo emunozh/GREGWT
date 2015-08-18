@@ -1,0 +1,13 @@
+Package: GREGWT
+Type: Package
+Title: Implements the GREGWT algorithm in R. 
+Version: 0.7.0
+Date: 2015-08-18
+Author: M. Esteban Munoz H.
+Maintainer: M. Esteban Munoz H. <emunozh@gmail.com>
+Description:
+    Implements the GREGWT (Generalised Regression and Weighting of sample survey results) algorithm in the R. 
+    The algorithm implemented in this package is based on the example presented
+    in: 
+        Rahman, A. (2009). Small Area Estimation Through Spatial Microsimulation Models. In 2nd International Microsimulation Association Conference . Ottawa, Canada.
+License: GPL-2
