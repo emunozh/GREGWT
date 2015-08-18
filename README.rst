@@ -34,8 +34,8 @@ Prepare data for simulation
         survey_categories=seq(1,3)
     )
 
-Runin GREGWT
-------------
+Running GREGWT
+--------------
 
 Rewheight the survey to area ``area_code``::
 
