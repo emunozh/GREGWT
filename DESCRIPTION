@@ -6,8 +6,18 @@ Date: 2015-08-18
 Author: M. Esteban Munoz H.
 Maintainer: M. Esteban Munoz H. <emunozh@gmail.com>
 Description:
-    Implements the GREGWT (Generalised Regression and Weighting of sample survey results) algorithm in the R. 
-    The algorithm implemented in this package is based on the example presented
-    in: 
-        Rahman, A. (2009). Small Area Estimation Through Spatial Microsimulation Models. In 2nd International Microsimulation Association Conference . Ottawa, Canada.
+    Implements the GREGWT (Generalised Regression and Weighting of sample
+    survey results) algorithm in the R.  The algorithm implemented in this
+    package is based on:
+    Singh, A. & Mohl, C. (1996) Understanding calibration estimators in survey
+    sampling Survey Methodology, 22 , 107-115;
+    Bell, P. (2000). Weighting and standard error estimation for ABS household
+    surveys (paper prepared for ABS methodology advisory committee); and
+    Tanton, R.; Vidyattama, Y.; Nepal, B. & McNamara, J. (2011) Small area
+    estimation using a reweighting algorithm Journal of the Royal Statistical
+    Society: Series A (Statistics in Society), 174 , 931-951
+    For further information see:
+    Munoz Hidalgo, M. E.; Tanton, R. & Vidattama, Y. (2015) A comparison of
+    the GREGWT and IPF methods for the re-weighting of surveys 5th World
+    Congress of the International Microsimulation Association (IMA),
 License: GPL-2
