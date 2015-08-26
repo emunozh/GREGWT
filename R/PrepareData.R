@@ -230,7 +230,8 @@ prepareData <- function(census, survey,           # require input data
                           X_complete=X_complete, Tx_complete=Tx_complete,
                           area_id=area$id, total_pop=area$pop, survey=survey)
     class(prepared.data) <- "prepareData"
-    return(prepared.data)}
+    return(prepared.data)
+}
 
 
 alignData <- function(Tx, align, breaks, area, verbose=F){
@@ -432,7 +433,7 @@ getPopulation <- function(Tx, breaks,
 
 
 computeTotal <- function(Tx, benchmark, verbose=F){
-    if(verbose) cat("\n\t\t\t|--> got benchmarks --> ")
+    if(verbose) cat("\n\t\t\t|--> got benchmarks --> ", benchmark[1], benchmark[2])
     benchmark <- as.numeric(benchmark)
     sums <- rowSums(
         Tx[names(Tx)[benchmark[1]:benchmark[2]]], na.rm=T)
