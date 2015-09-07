@@ -3,8 +3,8 @@ R GREGWT
 ========
 
 :Author: Esteban Munoz
-:Version: 0.7.0
-:Date: Mon Aug 19. 2015
+:Version: 0.7.1
+:Date: Mo 07 Sep 2015 09:53:08 CEST
 
 .. contents:: Table of Contents
    :depth: 2
