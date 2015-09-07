@@ -184,10 +184,10 @@ GREGWT.default <- function(data_in=FALSE,
         cat("\n\tX_complete: ", dim(X_complete))
         if (!(is.null(dim(Tx)))){
             cat("\n\tTx: ", dim(Tx))
-            cat("\n\ttotal_pop: ", dim(total_pop))
+            cat("\n\ttotal_pop: ", dim(total_pop)[1], dim(total_pop)[2])
         } else {
             cat("\n\tTx: ", length(Tx))
-            cat("\n\ttotal_pop: ", total_pop)
+            cat("\n\ttotal_pop: ", dim(total_pop)[1], dim(total_pop)[2])
         }
         cat("\n\tdx: ", length(dx))
     }
@@ -268,8 +268,9 @@ GREGWT.default <- function(data_in=FALSE,
     Tx_complete[is.na(Tx_complete)] <- 0
 
     # get number of simulation areas
+    if (verbose) cat("\ndi(Tx) --> ", dim(Tx), "\n")
     if (!(is.null(dim(Tx)))){
-        area_numbers <- dim(Tx)[1]
+        area_numbers <- dim(Tx)[2]
     } else {
         area_numbers <- 1
     }
@@ -287,7 +288,7 @@ GREGWT.default <- function(data_in=FALSE,
     EM <- as.numeric()
     ED <- as.numeric()
     for (i in seq(area_numbers)){
-
+        if (verbose) cat("\n", "loop --> ", i, "\n")
         if (!(is.null(dim(Tx)))){
             area_code_i <- area_code[i]
             Tx_i <- Tx[i,]
