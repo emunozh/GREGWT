@@ -57,9 +57,6 @@
 #' data("GREGWT.census")
 #' data("GREGWT.survey")
 #' 
-#' # setwd('~/workspace/R/GREGWT/src/')
-#' # source("GREGWT.R")
-#' 
 #' simulation_data <- prepareData(
 #'   GREGWT.census, GREGWT.survey,
 #'   survey_id=FALSE,
@@ -799,21 +796,21 @@ plot.GREGWT <- function(x, ...){
     layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
     names_y <- x$constrains_complete
     names_y <- gsub("G.", "", names_y)
+    cat(names_y)
     hTx <- colSums(
         x$final_weights * x$X_complete, na.rm=T)
-    #Tx <- colSums(x$input_weights * x$X, na.rm=T)
     Tx <- x$Tx_complete
     #PSAE <- as.numeric(abs(Tx-hTx)/length(x$final_weights)*100)
-    PSAE <- x$PSAE
+    #PSAE <- x$PSAE
+    PSAE <- abs(Tx-hTx) / x$pop * 100
     barplot(PSAE,
             names.arg=names_y,
             main="Percentage Error of model constrains",
             ylab="PSAE = (Tx - hTx)/n*100", xlab="")
     # Z-statistic
-    # r = hTx/sum(Tx)
-    # p = Tx/sum(Tx)
-    # Z <- (r-p)/sqrt(p*(1-p)/sum(Tx))
-    Z <- x$Z
+    r = hTx/sum(Tx, na.rm=T)
+    p = Tx/sum(Tx, na.rm=T)
+    Z <- (r-p)/sqrt(p*(1-p)/sum(Tx, na.rm=T))
     barplot(Z,
             names.arg=names_y,
             main="Z-Statistic of model constrains",
