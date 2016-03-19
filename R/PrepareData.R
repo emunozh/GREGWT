@@ -57,22 +57,30 @@
 #' @examples
 #' data("GREGWT.census")
 #' data("GREGWT.survey")
+#' 
 #' simulation_data <- prepareData(GREGWT.census, GREGWT.survey,
 #'                                census_categories=seq(2,24),
 #'                                survey_categories=seq(1,3))
-#' \dontrun{plot(simulation_data)}
 #' 
 #' simulation_data1 <- prepareData(GREGWT.census, GREGWT.survey,
-#'                                census_categories=seq(2,24),
-#'                                survey_categories=seq(1,3),
-#'                                pop_benchmark=c(1,11),
-#'                                verbose=TRUE)
+#'                                 census_categories=seq(2,24),
+#'                                 survey_categories=seq(1,3),
+#'                                 pop_benchmark=c(2,12),
+#'                                 verbose=TRUE)
+#' 
+#' # compute the total population as the mean of all benchmarks. Breaks parameters
+#' # needs to be defined. In this case the breaks are displaced by one because the
+#' # area code is on the first column.
 #' simulation_data2 <- prepareData(GREGWT.census, GREGWT.survey,
-#'                                census_categories=seq(2,24),
-#'                                survey_categories=seq(1,3),
-#'                                verbose=TRUE)
-#' plot(simulation_data1$total_pop)
-#' points(simulation_data2$total_pop, col="red", pch="+")
+#'                                 census_categories=seq(2,24),
+#'                                 survey_categories=seq(1,3),
+#'                                 breaks=c(11, 17),
+#'                                 verbose=TRUE)
+#' 
+#' total_pop1 <- simulation_data1$total_pop
+#' plot(total_pop1$pop)
+#' total_pop2 <- simulation_data2$total_pop
+#' points(total_pop2$pop, col="red", pch="+")
 #' 
 #' @author M. Esteban Munoz H.
 prepareData <- function(census, survey,           # require input data
@@ -241,10 +249,12 @@ alignData <- function(Tx, align, breaks, area, verbose=F){
             stop("in order to align the data I need to know the category breaks")
         }else{
             breaks <- c(1, breaks, dim(Tx)[2])
+            if (verbose) printBreaks(names(Tx), breaks)
             for(i in seq(dim(align)[2])){
                 vara <- names(align)[i]
-                breaks_sum = breaks[align[1,i]:align[2,i]]
                 sums <- area[vara]
+                breaks_sum = breaks[align[1,i]:align[2,i]]
+                if (verbose) printBreaks(names(Tx), breaks_sum, name=vara)
                 pos = 0
                 if(i > 1) pos = 1
                 Tx <- alignWithTotals(Tx, breaks_sum, sums, pos,
@@ -254,6 +264,15 @@ alignData <- function(Tx, align, breaks, area, verbose=F){
         }
     }
     return(Tx)
+}
+
+
+printBreaks <- function(names_tx, breaks, name="all"){
+    cat("\n\t\tBreaks: ", name, "\n")
+    for (br in breaks){
+        cat("\n\t\t", br, "-->", names_tx[br])
+    }
+    cat("\n")
 }
 
 
@@ -382,6 +401,7 @@ getPopulation <- function(Tx, breaks,
     if(class(building_benchmark) != "logical"){
         building_sums <- computeTotal(Tx_for_pop,
                                       building_benchmark,
+                                      name="bui",
                                       verbose=verbose)
     }else{
         building_sums <- FALSE
@@ -390,6 +410,7 @@ getPopulation <- function(Tx, breaks,
     if(class(du_benchmark) != "logical"){
         du_sums <- computeTotal(Tx_for_pop,
                                 du_benchmark,
+                                name="hhd",
                                 verbose=verbose)
     }else{
         du_sums <- FALSE
@@ -399,6 +420,7 @@ getPopulation <- function(Tx, breaks,
         if(class(pop_benchmark) != "logical"){
             pop_sums <- computeTotal(Tx_for_pop,
                                      pop_benchmark,
+                                     name="ind", 
                                      verbose=verbose)
         }else{
             if(verbose) cat("\n\t\t\t|--> got breaks --> ")
@@ -432,12 +454,17 @@ getPopulation <- function(Tx, breaks,
     return(total_pop)}
 
 
-computeTotal <- function(Tx, benchmark, verbose=F){
-    if(verbose) cat("\n\t\t\t|--> got benchmarks --> ", benchmark[1], benchmark[2])
+computeTotal <- function(Tx, benchmark, verbose=Fi, name="None"){
+    if (verbose) {
+        cat("\n\t\t\t|--> got benchmarks for: --> ", name, " at: ",
+            benchmark[1], benchmark[2], "\t<",
+            names(Tx)[benchmark[1]], " ... ",
+            names(Tx)[benchmark[2]], ">\t"
+                    )}
     benchmark <- as.numeric(benchmark)
     sums <- rowSums(
         Tx[names(Tx)[benchmark[1]:benchmark[2]]], na.rm=T)
-    if(verbose) cat(sum(sums, na.rm=T), " ok ")
+    if (verbose) cat(sum(sums, na.rm=T), " ok ")
     return(sums)
 }
 

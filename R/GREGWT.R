@@ -8,6 +8,7 @@
 
 #TODO: document GREGWT
 #TODO: implement weighted benchmarks
+
 #' @title GREGWT
 #'
 #' @description
@@ -48,7 +49,7 @@
 #' This will create a file called GREGWT.out on the current working directory.
 #' This option will suppress the output to the command line. You can process
 #' the output by calling the function logtocsv() provided by this package.
-#' @param verbose (optional, default = 10) be verbose
+#' @param verbose (optional, default = FALSE) be verbose
 #' @return GREGWT
 #' @examples
 #'
@@ -56,7 +57,10 @@
 #' data("GREGWT.census")
 #' data("GREGWT.survey")
 #' 
-#' Simulation.Data <- prepareData(
+#' # setwd('~/workspace/R/GREGWT/src/')
+#' # source("GREGWT.R")
+#' 
+#' simulation_data <- prepareData(
 #'   GREGWT.census, GREGWT.survey,
 #'   survey_id=FALSE,
 #'   pop_benchmark=c(2,12),
@@ -66,27 +70,16 @@
 #' 
 #' # reweight for 4 areas
 #' areas <- c("02", "11", "04011", "04012")
-#' Weights.GREGWT = GREGWT(data_in=Simulation.Data, area_code=areas)
-#' print(mean(Weights.GREGWT$final_weights))
+#' weights_GREGWT = GREGWT(data_in=simulation_data, area_code=areas)
+#' plot(weights_GREGWT)
 #' 
 #' # reweight and plot the results for a single area
 #' acode = "02"
-#' Tx = Simulation.Data$Tx[which(Simulation.Data$area_id==acode), ]
-#' X = as.data.frame(Simulation.Data$X)
-#' X_complete = as.data.frame(Simulation.Data$X_complete)
-#' Pop = Simulation.Data$total_pop[which(Simulation.Data$area_id==acode), ]
-#' Pop = Pop$pop
-#' Weights.GREGWT.02 <- GREGWT(
-#'   Tx = Tx,
-#'   dx_input = Simulation.Data$dx,
-#'   X_input = X,
-#'   X_complete_input = X_complete,
-#'   area_pop = Pop
-#'   )
+#' weights_GREGWT_02 <- GREGWT(data_in= simulation_data, area_code=acode)
 #' 
-#' plot(Weights.GREGWT.02)
-#' print(Weights.GREGWT.02)
-#' summary(Weights.GREGWT.02)
+#' plot(weights_GREGWT_02)
+#' print(weights_GREGWT_02)
+#' summary(weights_GREGWT_02)
 #'
 #' @author M. Estebna Munoz H.
 GREGWT <- function(x, ...) UseMethod("GREGWT")
@@ -268,11 +261,17 @@ GREGWT.default <- function(data_in=FALSE,
     Tx_complete[is.na(Tx_complete)] <- 0
 
     # get number of simulation areas
-    if (verbose) cat("\ndi(Tx) --> ", dim(Tx), "\n")
-    if (!(is.null(dim(Tx)))){
-        area_numbers <- dim(Tx)[2]
-    } else {
+    if (verbose) cat("\ndim(Tx) --> ", dim(Tx), "\n")
+    if (is.null(dim(Tx))){
         area_numbers <- 1
+    } else {
+        if (dim(Tx)[2] == 1){
+            if (verbose) cat("\nndim 2 TX", "\n")
+            area_numbers <- dim(Tx)[2]
+        } else {
+            if (verbose) cat("\nndim 1 TX", "\n")
+            area_numbers <- dim(Tx)[1]
+        }
     }
    
     # loop throgh all simulation areas
@@ -288,17 +287,18 @@ GREGWT.default <- function(data_in=FALSE,
     EM <- as.numeric()
     ED <- as.numeric()
     for (i in seq(area_numbers)){
+        if (verbose) cat("\n", "area_numbers -->", area_numbers, "\n")
         if (verbose) cat("\n", "loop --> ", i, "\n")
-        if (!(is.null(dim(Tx)))){
-            area_code_i <- area_code[i]
-            Tx_i <- Tx[i,]
-            Tx_complete_i <- Tx_complete[i, ]
-            pop_i <- pop[i]
-        } else {
+        if (area_numbers == 1){
             area_code_i <- area_code
             Tx_i <- Tx
             Tx_complete_i <- Tx_complete
             pop_i <- pop
+        } else {
+            area_code_i <- area_code[i]
+            Tx_i <- Tx[i, ]
+            Tx_complete_i <- Tx_complete[i, ]
+            pop_i <- pop[i]
         }
 
     # Divide initial weights by area population
@@ -365,7 +365,7 @@ GREGWT.default <- function(data_in=FALSE,
     }
 
     final_weights <- cbind(final_weights, model_iter$final_weights)
-    }
+    } # end loop areas
    
     model <- model_iter #TODO: is error implemented
 
@@ -523,7 +523,7 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
     }else{
         cat("| OK | ")}
 
-    cat("AC: ", area_code)
+    cat("AC: ", format(area_code, scientific=FALSE))
 
     if(is.character(group)){
         if (verbose) cat("Expanding group ")
@@ -543,7 +543,9 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
     return(list(input_weights=dx_output, final_weights=wx_output))
 } 
 
-#TODO: document alignPop #' @title alignPop
+#TODO: document alignPop 
+
+#' @title alignPop
 #'
 #' @description #' Aligns the survey weights with the total population
 #'
@@ -795,52 +797,50 @@ print.summary.GREGWT <- function(x, ...){
 
 plot.GREGWT <- function(x, ...){
     layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
-    names_y <- names(Weights.GREGWT$X_complete)
+    names_y <- x$constrains_complete
     names_y <- gsub("G.", "", names_y)
     hTx <- colSums(
-        Weights.GREGWT$final_weights * Weights.GREGWT$X_complete, na.rm=T)
-    #Tx <- colSums(Weights.GREGWT$input_weights * x$X, na.rm=T)
-    Tx <- Weights.GREGWT$Tx_complete
-    #PSAE <- as.numeric(abs(Tx-hTx)/length(Weights.GREGWT$final_weights)*100)
-    PSAE <- Weights.GREGWT$PSAE
+        x$final_weights * x$X_complete, na.rm=T)
+    #Tx <- colSums(x$input_weights * x$X, na.rm=T)
+    Tx <- x$Tx_complete
+    #PSAE <- as.numeric(abs(Tx-hTx)/length(x$final_weights)*100)
+    PSAE <- x$PSAE
     barplot(PSAE,
             names.arg=names_y,
             main="Percentage Error of model constrains",
             ylab="PSAE = (Tx - hTx)/n*100", xlab="")
     # Z-statistic
-    #r = hTx/sum(Tx)
-    #p = Tx/sum(Tx)
-    #Z <- (r-p)/sqrt(p*(1-p)/sum(Tx))
-    Z <- Weights.GREGWT$Z
+    # r = hTx/sum(Tx)
+    # p = Tx/sum(Tx)
+    # Z <- (r-p)/sqrt(p*(1-p)/sum(Tx))
+    Z <- x$Z
     barplot(Z,
-            #names.arg=x$constrains,
             names.arg=names_y,
             main="Z-Statistic of model constrains",
             ylab="Z = (r-p)/sqrt(p*(1-p)/sum(Tx))", xlab="")
 
-    if (is.null(dim(Weights.GREGWT$final_weights))){
+    if (dim(x$final_weights)[2] == 1){
         area_numbers <- 1
-        plot(as.numeric(Weights.GREGWT$final_weights), Weights.GREGWT$input_weights, 
+        plot(as.numeric(x$final_weights), x$input_weights, 
              pch=".",
              ylab="Input Weights [d]",
              xlab="New Weights [w]",
              main="Initial and estimated new weights")
     } else {
-        area_numbers <- dim(Weights.GREGWT$final_weights)[2]
-        plot(as.numeric(Weights.GREGWT$final_weights[,1]), Weights.GREGWT$input_weights, 
+        area_numbers <- dim(x$final_weights)[2]
+        plot(as.numeric(x$final_weights[,1]), x$input_weights, 
              pch=".",
              ylab="Input Weights [d]",
              xlab="New Weights [w]",
              main="Initial and estimated new weights")
-    }
-    for (i in seq(2, area_numbers)){
-        points(as.numeric(Weights.GREGWT$final_weights[, i]),
-               Weights.GREGWT$input_weights, col=i, pch=".")
-    }
+        for (i in seq(2, area_numbers)){
+            points(as.numeric(x$final_weights[, i]),
+                x$input_weights, col=i, pch=".")
+    }}
     abline(0,1,col="red")
 
     plot(sort(as.numeric(
-         Weights.GREGWT$final_weights) - Weights.GREGWT$input_weights),
+         x$final_weights) - x$input_weights),
          ylab="Weight distance [w - d]",
          xlab="",
          main="Weight distance")
@@ -850,6 +850,8 @@ plot.GREGWT <- function(x, ...){
     #plot(ED, EM)
 }
 
+#' @title logtocsv
+#'
 #' @description
 #' This function will try to read the log output created by function GREGWT
 #' with the output_log variable set to TRUE and generate a csv file on the same
