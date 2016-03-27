@@ -312,9 +312,11 @@ GREGWT.default <- function(data_in=FALSE,
     # Group initial weights for integrated reweight
     dx_oinput <- dx
     if(is.character(group)){
-        if(verbose) cat("\ngroup weights if integrated reweighting")
+        if(verbose) cat("\ngroup weights for integrated reweighting\n")
         dx <- groupDx(X, dx, group, pop_i)
-        if(verbose) cat(" length(dx-group): ", length(dx))
+        if(verbose) cat(" length(dx-group): ", length(dx), "\n")
+        X <- groupX(X, group)
+        if(verbose) cat(" dim(X-group): ", dim(X), "\n")
     }else{
         dx_oinput=FALSE
     }
@@ -437,7 +439,7 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
     if(verbose) cat("\n\tgroup...")
     if(is.character(group)){
         X <- X[,colnames(X)[colnames(X)!="Group.1"]]
-        X_complete <- X_complete[,colnames(X_complete)[colnames(X_complete)!="Group.1"]]
+        X <- as.matrix(X)
     }
     if(verbose) cat("ok")
 
@@ -524,19 +526,20 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
 
     if(is.character(group)){
         if (verbose) cat("Expanding group ")
-        weights <- expandGroup(X_g, wx, X, group)
+        weights_g <- expandGroup(X_g, wx, X_complete, group)
         dx_output=dx_oinput
-        wx_output=weights
+        wx_output=weights_g
     }else{
         dx_output=dx
         wx_output=wx}
 
-    wx_output <- cbind(survey_id, wx_output)
-    if (verbose) cat("bind index")
     if(align_pop){
-        if (verbose) cat("population alignment")
+        if (verbose) cat("\npopulation alignment")
         wx_output <- alignPop(wx_output, pop)
     }
+    if (verbose) cat("\nbind index")
+    wx_output <- cbind(survey_id, wx_output)
+    colnames(wx_output) <- c("id", "w")
 
     return(list(input_weights=dx_output, final_weights=wx_output))
 } 
@@ -612,8 +615,8 @@ expandGroup <- function(X_g, wx, X_input, group){
     Origin <- X_g[,"Group.1"]
     Grouped <- X_input[,group]
     index <- match(Grouped, Origin, nomatch=0) 
-    weights <- wx[index]
-    return(weights)}
+    weights_g <- wx[index]
+    return(weights_g)}
 
 
 computeError <- function(model, group, verbose=FALSE){

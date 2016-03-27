@@ -189,7 +189,8 @@ Synthetizeget <- function(survey, w, n_samples, pop_size_input,
         result=NULL)
 
     if (verbose) cat("\nOK\n")
-    return(result)}
+    return(result)
+}
 
 
 unGroupData <- function(survey, pop_size_input, n_samples, HHsize_mean_fit){
@@ -275,7 +276,8 @@ fillPop <- function(synthetic.pop, expected.dim){
         to.index = dim(synthetic.pop)[1]+gap
         #cat(" to index:", to.index,"\n")
         synthetic.pop <- synthetic.pop[1:to.index,]}
-    return(synthetic.pop)}
+    return(synthetic.pop)
+}
 
 
 findBest <- function(result, n_samples, benchmarks,

@@ -72,9 +72,6 @@ library('GREGWT')
 data("GREGWT.census")
 data("GREGWT.survey")
 
-# setwd('~/workspace/R/GREGWT/src/')
-# source("GREGWT.R")
-
 simulation_data <- prepareData(
   GREGWT.census, GREGWT.survey,
   survey_id=FALSE,

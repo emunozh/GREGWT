@@ -108,6 +108,8 @@ prepareData <- function(census, survey,           # require input data
         cat("\ndim(census):", dim(census))
     }
 
+    if(class(group) != "logical"){group_id <- survey[group]}
+
     ### Format data census
     # get id pos pop
     area <- getAreaid(census, census_area_id=census_area_id, breaks=breaks,
@@ -191,17 +193,12 @@ prepareData <- function(census, survey,           # require input data
     if(dim(X)[1] == 0){stop("X is empty")}
     if(verbose) cat(" ok")
 
-    ### Check class of group variable
-    if(class(group) == "logical"){
-        group <- as.logical(group)
-    }else{
-        group <- as.character(group)}
-
-    ### If group variable is define, group data
-    if(class(group) == "character"){
-        if(verbose) cat("grouping to:", group, "\t")
-        X <- groupX(X, group)
-        dx <- groupDx(X.input, dx, group)}
+    # Add group variable if defined
+    Xt <- X
+    if(class(group) != "logical"){
+        X <- cbind(X, group_id)
+        X_complete <- cbind(X_complete, group_id)
+    }
 
     ### Sort variables by name
     X <- X[, order(colnames(X))]
@@ -209,20 +206,13 @@ prepareData <- function(census, survey,           # require input data
 
     # Save original data set
     Xin <- X
-    if(sum(names(Xin)=="Group.1")==1){X <- X[names(X) != "Group.1"]}
 
     # remove columns of 1 and 0
     Xo <- X[colSums(X,na.rm=TRUE) != 0 & colSums(X,na.rm=TRUE) != dim(X)[1]]
-    Txo <- Tx[colSums(X,na.rm=TRUE) != 0 & colSums(X,na.rm=TRUE) != dim(X)[1]]
+    Txo <- Tx[colSums(Xt,na.rm=TRUE) != 0 & colSums(Xt,na.rm=TRUE) != dim(Xt)[1]]
     removed.var <- dim(X)[2] - dim(Xo)[2]
-    if(removed.var>=1){
-        if(verbose){
-            cat("removed:", removed.var)}}
-            #, "constrains: ", paste(
-            #    names(X)[!(names(X) %in% names(Xo))], collapse="; "), " ")}}
+    if(removed.var>=1){if(verbose){cat("removed:", removed.var)}}
 
-    # Add group variable if defined
-    if(sum(names(Xin)=="Group.1")==1){Xo <- cbind(Xo, Xin["Group.1"])}
     # Add survey id
     Xo <- cbind(survey_id, Xo)
 
