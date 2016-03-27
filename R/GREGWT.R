@@ -322,7 +322,7 @@ GREGWT.default <- function(data_in=FALSE,
 
     if(verbose) cat("\nGREGWT...")
     model_iter <- GREGWTest(X, dx, Tx_i, X_complete, Tx_complete, pop_i,
-                       # survey_id=survey_id,
+                       survey_id=survey_id,
                        use_ginv=use_ginv, 
                        group=group,
                        bounds=bounds,
@@ -419,7 +419,7 @@ GREGWT.default <- function(data_in=FALSE,
 
 GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
                       # Optional variables
-                      # survey_id="survey_id",
+                      survey_id="survey_id",
                       use_ginv=FALSE,
                       group=FALSE,
                       bounds=c(-Inf,Inf),
@@ -531,7 +531,8 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
         dx_output=dx
         wx_output=wx}
 
-    #wx_output <- cbind(survey_id, wx_output)
+    wx_output <- cbind(survey_id, wx_output)
+    if (verbose) cat("bind index")
     if(align_pop){
         if (verbose) cat("population alignment")
         wx_output <- alignPop(wx_output, pop)
@@ -796,7 +797,6 @@ plot.GREGWT <- function(x, ...){
     layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
     names_y <- x$constrains_complete
     names_y <- gsub("G.", "", names_y)
-    cat(names_y)
     hTx <- colSums(
         x$final_weights * x$X_complete, na.rm=T)
     Tx <- x$Tx_complete
