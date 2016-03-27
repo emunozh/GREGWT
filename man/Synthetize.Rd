@@ -31,6 +31,10 @@ will output an array of size [pop,x], this array is the 'best' fit to
 benchmarks; (3) c('bestpop', n) similar to best bust gives more attention
 to population totals, important if running an integrated reweight.}
 
+\item{distribution}{(default = FALSE) FALSE = use weight as probability;
+ones = use a vector of ones as selection probability;
+uniform = use a random uniform distribution as selection probability.}
+
 \item{HHsize_mean_fit}{(default = 1.8) mean household size.}
 
 \item{max_iter}{(default = 100) maximal iterations}

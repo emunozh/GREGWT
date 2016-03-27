@@ -6,6 +6,7 @@
 #
 
 #TODO: document Synthetize
+
 #' @title Synthetize
 #'
 #' @description
@@ -29,6 +30,9 @@
 #' will output an array of size [pop,x], this array is the 'best' fit to
 #' benchmarks; (3) c('bestpop', n) similar to best bust gives more attention
 #' to population totals, important if running an integrated reweight. 
+#' @param distribution (default = FALSE) FALSE = use weight as probability;
+#' ones = use a vector of ones as selection probability;
+#' uniform = use a random uniform distribution as selection probability.
 #' @param HHsize_mean_fit (default = 1.8) mean household size.
 #' @param max_iter (default = 100) maximal iterations
 #' @param fit_tolerance (default = 0.1) tolerance to achieve a fit
@@ -48,6 +52,7 @@ Synthetize.default <- function(
                           pop_size_input = FALSE,
                           benchmarks = NULL,
                           method = c("random", 1),
+                          distribution = FALSE,
                           group = FALSE,
                           HHsize_mean_fit = 1.8,
                           max_iter = 100,
@@ -79,8 +84,21 @@ Synthetize.default <- function(
             }
         }
     } else {
-        survey <- data_in$X_complete
-        w <- data_in$final_weights
+        survey <- data_in$X
+        nW <- dim(survey)[1]
+        if (distribution == "uniform"){
+            w <- runif(nW)
+        }else if (distribution == "ones"){
+            w <- rep(1, nW)
+        } else {
+            w <- data_in$final_weights[,'w']
+            #if (length(w) != nW){cat('ERROR!: wrong weight length\nexpected: ', nW, '\tgot: ', length(w), '\n')}
+            if (is.nan(mean(w))) {
+                w[is.nan(w)] <- 1
+            } else {
+                w[is.nan(w)] <- mean(w)
+            }
+        }
     }
 
     # prepare array for synthetic population
@@ -159,9 +177,13 @@ Synthetizeget <- function(survey, w, n_samples, pop_size_input,
 
     if(class(group) == "character"){
         if (verbose) cat("\ngroupped data\n")
-        results <- unGroupData(survey, pop_size_input,
-                               n_samples, HHsize_mean_fit)
-    }else{ if (verbose) cat("\nungroupded data")}
+        result <- unGroupData(survey, pop_size_input,
+                              n_samples, HHsize_mean_fit,
+                              group, w,
+                              fit_tolerance=fit_tolerance,
+                              max_iter = max_iter,
+                              verbose=verbose)
+    }else{ if (verbose) cat("\nungroupded data")
 
     if (method == "fbs"){
         result <- fbs(n_samples)
@@ -174,14 +196,16 @@ Synthetizeget <- function(survey, w, n_samples, pop_size_input,
             result[,,i] <- as.matrix(synthetic_pop)
         }
     }
+    }
 
     if (verbose) cat("\nusing method: ", method)
 
     switch(method,
         "random"={result=result},
         "fbs"={result=result},
-        "best"={result=findBest(result, n_samples,
-                                benchmarks, verbose=verbose)},
+        "best"={
+            result=findBest(result, n_samples, benchmarks,
+                            verbose=verbose)},
         "bestpop"={
             result=findBest(result, n_samples, benchmarks,
                             pop_size_input, verbose=verbose)
@@ -193,22 +217,27 @@ Synthetizeget <- function(survey, w, n_samples, pop_size_input,
 }
 
 
-unGroupData <- function(survey, pop_size_input, n_samples, HHsize_mean_fit){
+unGroupData <- function(survey, pop_size_input, n_samples, HHsize_mean_fit,
+                        group, w,
+                        fit_tolerance = 0.1,
+                        max_iter = 100,
+                        verbose=FALSE){
     # create the result array
+    if (verbose) cat("\nungrooping data...\n")
     result=array(NaN, dim=c(pop_size_input, dim(survey)[2], n_samples))
     dimnames(result) <- list(NULL,colnames(survey),NULL)
 
-    X.g <- data.frame(HHid=survey[,group],
-                    HHsize=(vector(length=dim(survey)[1])+1)) 
-    X.g <- aggregate(X.g, by=list(survey[,group]), FUN=sum)
-    X.g <- X.g[names(X.g)!=group]
+    X_g <- data.frame(HHid=survey[,group],
+                      HHsize=(vector(length=dim(survey)[1])+1)) 
+    X_g <- aggregate(X_g, by=list(survey[,group]), FUN=sum)
+    X_g <- X_g[names(X_g)!=group]
 
-    wx.g <- aggregate(w, by=list(survey[,group]), FUN=mean)
-    wx.g <- as.matrix(wx.g)
-    wx.g <- as.numeric(wx.g[,"x"])
-    mean.w <- mean(wx.g)
+    wx_g <- aggregate(w, by=list(survey[,group]), FUN=mean)
+    wx_g <- as.matrix(wx_g)
+    wx_g <- as.numeric(wx_g[,"x"])
+    mean_w <- mean(wx_g)
 
-    pop_size.sel = pop_size_input / HHsize_mean_fit
+    pop_size_sel = pop_size_input / HHsize_mean_fit
 
     for(i in seq(1,n_samples)){
         HHsize_mean_sel = 0 
@@ -223,25 +252,24 @@ unGroupData <- function(survey, pop_size_input, n_samples, HHsize_mean_fit){
             if(iter.num == max_iter) break
             iter.num = iter.num + 1
             pop.index <- sample(
-                nrow(X.g), pop_size.sel, replace=TRUE, prob=wx.g)
-            pop_sel_temp <- X.g[pop.index, ]
-            HHsize_mean_sel.temp <- mean(pop_sel_temp$HHsize)
-            #cat("household size: ", HHsize_mean_sel.temp, "\n")
-            HHsize_sum_sel.temp <- sum(pop_sel_temp$HHsize)
-            if((abs(HHsize_mean_sel.temp-HHsize_mean_fit)<HHsize_delta) &&
-            (abs(HHsize_sum_sel.temp- pop_size_input) <Popsize_delta)){
-                HHsize_mean_sel <- HHsize_mean_sel.temp 
+                nrow(X_g), pop_size_sel, replace=TRUE, prob=wx_g)
+            pop_sel_temp <- X_g[pop.index, ]
+            HHsize_mean_sel_temp <- mean(pop_sel_temp$HHsize)
+            if (verbose) cat("household size: ", HHsize_mean_sel_temp, "\n")
+            HHsize_sum_sel_temp <- sum(pop_sel_temp$HHsize)
+            if((abs(HHsize_mean_sel_temp-HHsize_mean_fit)<HHsize_delta) &&
+            (abs(HHsize_sum_sel_temp- pop_size_input) <Popsize_delta)){
+                HHsize_mean_sel <- HHsize_mean_sel_temp 
                 HHsize_delta <- abs(HHsize_mean_sel-HHsize_mean_fit)
                 HHsize_sum_sel <- HHsize_sum_sel_temp
                 Popsize_delta <- abs(HHsize_sum_sel-pop_size_input)
-                pop.sel <- pop_sel_temp
+                pop_sel <- pop_sel_temp
             }else{
-                #HHsize_delta.2 <- HHsize_mean_sel-HHsize_mean_fit
                 if(HHsize_mean_sel > HHsize_mean_fit){
-                    this_index = X.g$HHsize <= HHsize_mean_fit
+                    this_index = X_g$HHsize <= HHsize_mean_fit
                 }else{
-                    this_index = X.g$HHsize >= HHsize_mean_fit}
-                wx.g[this_index] <- wx.g[this_index] + mean_w}}
+                    this_index = X_g$HHsize >= HHsize_mean_fit}
+                wx_g[this_index] <- wx_g[this_index] + mean_w}}
 
         synthetic_pop <- data.frame(
             matrix(NA, nrow=0, ncol=dim(survey)[2]))
@@ -249,17 +277,19 @@ unGroupData <- function(survey, pop_size_input, n_samples, HHsize_mean_fit){
 
         p <- pop_sel$Group.1 
         for(j in seq(length(p))){
-            spp <- survey[which(X[,group] == p[j]), ]
+            spp <- survey[which(survey[,group] == p[j]), ]
             spp[group] <- j
             synthetic_pop <- rbind(synthetic_pop, spp)}
 
         if(dim(result)[1] != dim(synthetic_pop)[1]){
-            #cat("people!\t got:", dim(synthetic.pop)[1])
-            #cat(" want:", dim(result)[1],"\n")
+            if (verbose) cat("people!\t got:", dim(synthetic_pop)[1])
+            if (verbose) cat(" want:", dim(result)[1],"\n")
             synthetic_pop <- fillPop(synthetic_pop, dim(result)[1])}
 
         result[,,i] <- as.matrix(synthetic_pop)
     }
+    if (verbose) cat("OK\n")
+    return(result)
 }
 
 

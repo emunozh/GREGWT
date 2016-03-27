@@ -311,6 +311,7 @@ GREGWT.default <- function(data_in=FALSE,
 
     # Group initial weights for integrated reweight
     dx_oinput <- dx
+    X_oinput <- X
     if(is.character(group)){
         if(verbose) cat("\ngroup weights for integrated reweighting\n")
         dx <- groupDx(X, dx, group, pop_i)
@@ -337,7 +338,7 @@ GREGWT.default <- function(data_in=FALSE,
                        verbose=verbose)
     if (verbose) cat(" ... ok")
 
-    model_iter$X <- X
+    model_iter$X <- X_oinput
     model_iter$X_complete <- X_complete
     model_iter$constrains <- constrains_names
     model_iter$constrains_complete <- constrains_complete
@@ -382,7 +383,7 @@ GREGWT.default <- function(data_in=FALSE,
     model$Tx <- Tx
     model$Tx_complete <- Tx_complete
     model$pop <- pop
-    model$X <- X
+    model$X <- X_oinput
     model$X_complete <- X_complete
     model$constrains <- constrains_names
     model$constrains_complete <- constrains_complete
