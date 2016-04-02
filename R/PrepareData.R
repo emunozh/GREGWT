@@ -8,15 +8,15 @@
 #' @title prepareData
 #'
 #' @description
-#' Prepares the data for simulation 
+#' Prepares the data for simulation
 #'
 #' @param census Census data of small areas.
 #' @param survey A survey of individual records (microdata).
 #' @param census_area_id (optional, default=1) row name or row index with
 #' area id in the census data. Define as `FALSE` if area code should be
 #' generated.
-#' @param census_categories (optional, default=FALSE) row names with categories
-#' to be used in the simulation.
+#' @param census_categories (optional, default=FALSE) row names or row index
+#' of with categories to be used in the simulation.
 #' @param survey_weights (optional, default=FALSE) row name or row index of
 #' initial weights in the survey data. `FALSE` will use the last column.
 #' @param survey_id (optional, default=1) individual records id's. Define
@@ -31,7 +31,7 @@
 #' @param use_base (optional, default=TRUE) use the model.matrix function form
 #' base R.
 #' @param breaks (optional, default=FALSE) define the beaks to calculate
-#' population totals, if FALSE population totals won't be computed 
+#' population totals, if FALSE population totals won't be computed
 #' @param pop_benchmark (optional, default=FALSE) define the benchmark to be
 #' used for the computation of the total population, pass as a vector/
 #' containing the breaks of the benchmark (e.g. \code{pop_benchmark=c(1,5)}).
@@ -52,22 +52,22 @@
 #' @return dx Survey design weights.
 #' @return area_id Small area ID.
 #' @return total_pop mean population totals for each area
-#' @return X_complete binary formated survey with all all categories 
+#' @return X_complete binary formatted survey with all all categories
 #' @return Tx_complete marginal sums with all categories
 #' @examples
 #' data("GREGWT.census")
 #' data("GREGWT.survey")
-#' 
+#'
 #' simulation_data <- prepareData(GREGWT.census, GREGWT.survey,
 #'                                census_categories=seq(2,24),
 #'                                survey_categories=seq(1,3))
-#' 
+#'
 #' simulation_data1 <- prepareData(GREGWT.census, GREGWT.survey,
 #'                                 census_categories=seq(2,24),
 #'                                 survey_categories=seq(1,3),
 #'                                 pop_benchmark=c(2,12),
 #'                                 verbose=TRUE)
-#' 
+#'
 #' # compute the total population as the mean of all benchmarks. Breaks parameters
 #' # needs to be defined. In this case the breaks are displaced by one because the
 #' # area code is on the first column.
@@ -76,31 +76,31 @@
 #'                                 survey_categories=seq(1,3),
 #'                                 breaks=c(11, 17),
 #'                                 verbose=TRUE)
-#' 
+#'
 #' total_pop1 <- simulation_data1$total_pop
 #' plot(total_pop1$pop)
 #' total_pop2 <- simulation_data2$total_pop
 #' points(total_pop2$pop, col="red", pch="+")
-#' 
+#'
 #' @author M. Esteban Munoz H.
-prepareData <- function(census, survey,           # require input data
-                        census_area_id=1,         # census area id
-                        census_categories=FALSE,  # census categories
-                        survey_weights=FALSE,     # survey weights
-                        survey_id=1,              # survey id
-                        survey_categories=FALSE,  # survey categories 
-                        reference_col=FALSE,      # define a reference column 
-                        group=FALSE,              # if iterated reweighting
-                        convert=TRUE,             # convert data to binary
-                        na.rm=FALSE,              # remove nan
-                        use_base=TRUE,            # use model.matrix
-                        breaks=FALSE,             # compute population totals
-                        pop_benchmark=FALSE,      # benchmark to be use for pop
-                        du_benchmark=FALSE,       # benchmark to be use for du
-                        building_benchmark=FALSE, # benchmark to be use for building
-                        align=FALSE,              # align to total population
-                        pop_total_col=FALSE,      # population totals
-                        verbose=FALSE             # be verbose
+prepareData <- function(census, survey,            # require input data
+    census_area_id     = 1,     # census area id
+    survey_id          = 1,     # survey id
+    convert            = TRUE,  # convert data to binary
+    use_base           = TRUE,  # use model.matrix
+    census_categories  = FALSE, # census categories
+    survey_weights     = FALSE, # survey weights
+    survey_categories  = FALSE, # survey categories
+    reference_col      = FALSE, # define a reference column
+    group              = FALSE, # if iterated reweighting
+    na.rm              = FALSE, # remove nan
+    breaks             = FALSE, # compute population totals
+    pop_benchmark      = FALSE, # benchmark to be use for pop
+    du_benchmark       = FALSE, # benchmark to be use for du
+    building_benchmark = FALSE, # benchmark to be use for building
+    align              = FALSE, # align to total population
+    pop_total_col      = FALSE, # population totals
+    verbose            = FALSE  # be verbose
                         ){
     if(verbose){
         cat("preparing data --> ")
@@ -208,22 +208,22 @@ prepareData <- function(census, survey,           # require input data
     Xin <- X
 
     # remove columns of 1 and 0
-    Xo <- X[colSums(X,na.rm=TRUE) != 0 & colSums(X,na.rm=TRUE) != dim(X)[1]]
+    Xo  <-  X[colSums(X,na.rm=TRUE)  != 0 & colSums(X,na.rm=TRUE)  != dim(X)[1]]
     Txo <- Tx[colSums(Xt,na.rm=TRUE) != 0 & colSums(Xt,na.rm=TRUE) != dim(Xt)[1]]
     removed.var <- dim(X)[2] - dim(Xo)[2]
-    if(removed.var>=1){if(verbose){cat("removed:", removed.var)}}
+    if (removed.var>=1) { if (verbose){cat("removed:", removed.var) } }
 
     # Add survey id
-    Xo <- cbind(survey_id, Xo)
+    Xo  <- cbind(survey_id, Xo)
 
     # Convert data to matrix
-    if(class(Xo) == "data.frame"){Xo <- data.matrix(Xo)}
-    Xo <- as.matrix(Xo)
+    if (class(Xo) == "data.frame"){ Xo <- data.matrix(Xo) }
+    Xo  <- as.matrix(Xo)
     #
-    if(class(Txo) == "data.frame"){Txo <- data.matrix(Txo)}
+    if (class(Txo) == "data.frame"){ Txo <- data.matrix(Txo) }
     Txo <- as.matrix(Txo)
 
-    if(verbose) cat("data:OK\n")
+    if (verbose) cat("data:OK\n")
     prepared.data <- list(X=Xo, Tx=Txo, dx=dx, breaks=breaks,
                           X_complete=X_complete, Tx_complete=Tx_complete,
                           area_id=area$id, total_pop=area$pop, survey=survey)
@@ -243,13 +243,15 @@ alignData <- function(Tx, align, breaks, area, verbose=F){
             for(i in seq(dim(align)[2])){
                 vara <- names(align)[i]
                 sums <- area[vara]
-                breaks_sum = breaks[align[1,i]:align[2,i]]
-                if (verbose) printBreaks(names(Tx), breaks_sum, name=vara)
-                pos = 0
-                if(i > 1) pos = 1
-                Tx <- alignWithTotals(Tx, breaks_sum, sums, pos,
-                                      name=vara, 
-                                      verbose=verbose)
+                if (length(sums) >= 1 && sums != 0){
+                    breaks_sum = breaks[align[1,i]:align[2,i]]
+                    if (verbose) printBreaks(names(Tx), breaks_sum, name=vara)
+                    pos = 0
+                    if(i > 1) pos = 1
+                    Tx <- alignWithTotals(Tx, breaks_sum, sums, pos,
+                                          name=vara,
+                                          verbose=verbose)
+                }
             }
         }
     }
@@ -277,7 +279,7 @@ printBreaks <- function(names_tx, breaks, name="all"){
 #' id in the survey. If False a new id vector will be generated for the survey.
 #' @param breaks (optional, default=FALSE) breaks of the categories, needed to
 #' estimate the total population of the areas. If FALSE the function will not
-#' compute the total population for the simulation areas.  
+#' compute the total population for the simulation areas.
 #' @param pop_benchmark (optional, default=FALSE) define the benchmark to be
 #' used for the computation of the total population, pass as a vector
 #' containing the breaks of the benchmark (e.g. \code{pop_benchmark=c(1,5)}).
@@ -286,25 +288,29 @@ printBreaks <- function(names_tx, breaks, name="all"){
 #' @param pop_total_col (optional, default=FALSE) col containing the population
 #' totals
 #' @param verbose (optional, default=FALSE) be verbose
-#' @return list(id, pos, pop) 
+#' @return list(id, pos, pop)
 #' @author M. Esteban Munoz H.
 #TODO: examples
 getAreaid <- function(census,
-                      census_area_id=FALSE,
-                      breaks=FALSE,
-                      pop_benchmark=FALSE,
-                      du_benchmark=FALSE,
-                      building_benchmark=FALSE,
-                      pop_total_col=FALSE,
-                      verbose=FALSE){
+                      census_area_id    = FALSE,
+                      breaks            = FALSE,
+                      pop_benchmark     = FALSE,
+                      du_benchmark      = FALSE,
+                      building_benchmark= FALSE,
+                      pop_total_col     = FALSE,
+                      verbose           = FALSE
+                      ){
     if(verbose) cat("\n\t|--> get area id --> ")
     if(class(census_area_id) %in% c("numeric", "integer")){
+        if (verbose) cat("by possition (", names(census)[census_area_id], ")")
         area_id <- census[census_area_id]
         area_id_pos <- census_area_id
     }else if(is.logical(census_area_id)){
+        if (verbose) cat("created new")
         area_id <- as.data.frame(seq(dim(census)[1]))
         area_id_pos <- census_area_id
     }else{
+        if (verbose) cat("by name (", census_area_id, ")")
         area_id <- census[names(census) %in% census_area_id]
         area_id_pos <- which(names(census) == census_area_id)
     }
@@ -350,34 +356,32 @@ getAreaid <- function(census,
 #' @examples
 #' data("GREGWT.census")
 #' total_pop <- getPopulation(GREGWT.census, c(11,17), area_id_pos=1)
-#' @author M. Estebna Munoz H.
+#' @author M. Esteban Munoz H.
 getPopulation <- function(Tx, breaks,
-                          area_id_pos=FALSE,
-                          area_id=FALSE,
-                          pop_benchmark=FALSE,
-                          du_benchmark=FALSE,
-                          building_benchmark=FALSE,
-                          pop_total_col=FALSE,
-                          verbose=FALSE){
+                          area_id_pos        = FALSE,
+                          area_id            = FALSE,
+                          pop_benchmark      = FALSE,
+                          du_benchmark       = FALSE,
+                          building_benchmark = FALSE,
+                          pop_total_col      = FALSE,
+                          verbose            = FALSE
+                          ){
 
     Tx_for_pop <- Tx
     if(verbose) cat("\n\t\t|--> get population totals --> ")
-    # area_id_pos = 1
-    # area_id = FALSE
-    if(!(is.logical(area_id_pos)) & is.logical(area_id)){
+    if(!(is.logical(area_id_pos))) {
         if(verbose) cat("\n\t\t\t|--> got area id position --> ")
-        area_id <- Tx[area_id_pos]
+        area_id_dat <- Tx[area_id_pos]
         Tx <- Tx[-area_id_pos]
         if(verbose) cat("ok ")
-    # area_id_pos = FALSE
-    # area_id = FALSE
     }else if(is.logical(area_id_pos) & is.logical(area_id)){
         stop("To compute the population total this function needs either:
-    (a) the position of the area id area_id_pos=int; or 
+    (a) the position of the area id area_id_pos=int; or
     (b) a vector with the area id area_id=vector()")
-    }else if(!(is.logical(area_id_pos)) & !(is.logical(area_id))){
-        if(verbose) cat("\n\t\t\t|--> got area id name --> ")
-        Tx <- Tx[-area_id_pos]
+    }else if(!(is.logical(area_id))){
+        if(verbose) cat("\n\t\t\t|--> got area id name --> ", area_id)
+        area_id_dat <- Tx[which(names(Tx) == area_id)]
+        Tx <- Tx[which(names(Tx) != area_id)]
         if(verbose) cat("ok ")
     }
 
@@ -410,18 +414,23 @@ getPopulation <- function(Tx, breaks,
         if(class(pop_benchmark) != "logical"){
             pop_sums <- computeTotal(Tx_for_pop,
                                      pop_benchmark,
-                                     name="ind", 
+                                     name="ind",
                                      verbose=verbose)
-        }else{
+        }else if(is.logical(du_benchmark) & is.logical(building_benchmark)){
             if(verbose) cat("\n\t\t\t|--> got breaks --> ")
             breaks <- c(breaks, dim(Tx)[2])
             pop_sums <- vector(length=dim(Tx)[1])
             i = 1; j = 0
             for(b in breaks){
-                pop_sums <- pop_sums + rowSums(Tx[names(Tx)[i:b]])
+                print(j)
+                pop_sums <- pop_sums + rowSums(Tx[names(Tx)[i:b]], na.rm=TRUE)
                 i = b+1; j = j+1}
-                pop_sums = pop_sums / j}
-            if(verbose) cat("ok ")
+                pop_sums = pop_sums / j
+            if(verbose) cat(" ok ")
+        }else{
+            cat("\nWARNING! no total population defined\n")
+            pop_sums <- FALSE
+        }
         if(sum(is.na(pop_sums_t))){
             if(verbose) cat("\n\t\t\t|--> fill missing --> ")
             pop_sums_t[is.na(pop_sums_t)] <- pop_sums[is.nan(pop_sums_t)]
@@ -432,9 +441,9 @@ getPopulation <- function(Tx, breaks,
         pop_sums <- pop_sums_t
     }
 
-    total_pop <- matrix(0, nrow=dim(area_id)[1], ncol=2)
+    total_pop <- matrix(0, nrow=dim(area_id_dat)[1], ncol=2)
     total_pop <- data.frame(
-        code <- area_id,
+        code <- area_id_dat,
         pop <- pop_sums,
         du <- du_sums,
         building <- building_sums
@@ -444,7 +453,7 @@ getPopulation <- function(Tx, breaks,
     return(total_pop)}
 
 
-computeTotal <- function(Tx, benchmark, verbose=Fi, name="None"){
+computeTotal <- function(Tx, benchmark, verbose=FALSE, name="None"){
     if (verbose) {
         cat("\n\t\t\t|--> got benchmarks for: --> ", name, " at: ",
             benchmark[1], benchmark[2], "\t<",
@@ -504,7 +513,7 @@ filterData <- function(
 
     # survey id
     if(class(survey_id) %in% c("numeric", "integer")){
-        survey_id <- survey[survey_id] 
+        survey_id <- survey[survey_id]
     }else if(class(survey_id) == "logical"){
         survey_id <- as.data.frame(seq(dim(survey)[1]))
     }else{
@@ -528,7 +537,7 @@ filterData <- function(
     if(na.rm){
         remove = rowSums(is.na(X)) != 1
         X <- X[remove, ]
-        dx <- dx[remove] 
+        dx <- dx[remove]
         survey_id <- survey_id[remove]}
     if(verbose) cat("dim(Tx):", dim(Tx))
     if(verbose) cat(" length(dx):", length(dx))
@@ -551,8 +560,8 @@ filterData <- function(
 #' @param reference_col (optional, default=FALSE) variable defining which
 #' columns to use as reference columns. If FALSE the algorithm will
 #' automatically select which categories to use as reference, if TRUE all
-#' categories will be maintain. 
-#' @param use_base (optional, default=TRUE) use base R function 
+#' categories will be maintain.
+#' @param use_base (optional, default=TRUE) use base R function
 #' @param verbose (optional, default=FALSE) be verbose
 #' @return X data matrix containing binary data
 #' @author M. Esteban Munoz H.
@@ -612,7 +621,7 @@ toBinary <- function(X, reference_col=FALSE, use_base=TRUE, verbose=FALSE){
 #'
 #' @param X input matrix
 #' @param type (optional, default="all"). Maintain all categories or create
-#' reference categories 
+#' reference categories
 #' @param use_base (optional, default=TRUE). Use the R base function
 #' `model.matrix`
 #' @param verbose (optional, default=FALSE) be verbose
@@ -655,7 +664,7 @@ makeDummy <- function(X, verbose=FALSE){
     if(verbose) cat("dim(X):", dim(X))
 
     lev <- lapply(X, levels)
-    lev_names <- unique(unlist(lev)) 
+    lev_names <- unique(unlist(lev))
     lev_num <- sum(sapply(lev,  length))
 
     temp <- matrix(0, nrow=dim(X)[1], ncol=lev_num)
@@ -671,7 +680,7 @@ makeDummy <- function(X, verbose=FALSE){
     return(X_out)}
 
 
-namesDiff <- function(d_1, d_2){ 
+namesDiff <- function(d_1, d_2){
     namesd <- names(d_1)[!(names(d_1) %in% names(d_2))]
     return(paste(namesd, collapse="\t"))}
 
@@ -679,7 +688,7 @@ namesDiff <- function(d_1, d_2){
 #' @title plotPrepareData
 #'
 #' @description
-#' Visualize the correlation between categories of all constrains. 
+#' Visualize the correlation between categories of all constrains.
 #'
 #' @param prepareData object
 #' @return NULL
@@ -702,15 +711,15 @@ plotPrepareData <- function(data.in,...){
 #' @param name_breaks, breaks defining the different variables
 #' @param omit (optional, default=FALSE), omit a specific variable
 #' @return Tx_out, data with estimated values
-#' @author M. Estebna Munoz H.
+#' @author M. Esteban Munoz H.
 #TODO: make example fillMissing
 fillMissing <- function(
-        Tx, # marginal totals with missing values
+        Tx,          # marginal totals with missing values
         name_breaks, # position of the categories breaks
-        omit=FALSE # optional to omit a certain category
+        omit=FALSE   # optional to omit a certain category
                         ){
     name_breaks <- c(1, name_breaks, dim(Tx)[2]+1)
-    
+
     Tx_out <- data.frame(temp=vector(length=dim(Tx)[1]))
 
     for(i in seq(length(name_breaks)-1)){
@@ -747,7 +756,7 @@ fillNA <- function(subTx_na, freq_rel){
 #' @param pop_totals, population totals vector
 #' @param verbose (optional, default=FALSE) be verbose
 #' @return Tx_align, align census data
-#' @author M. Estebna Munoz H.
+#' @author M. Esteban Munoz H.
 #TODO: make example alignWithTotals
 alignWithTotals <- function(Tx, breaks, pop_totals, pos,
                             name="standard", verbose=FALSE){
@@ -760,8 +769,6 @@ alignWithTotals <- function(Tx, breaks, pop_totals, pos,
         }
         if(verbose) cat("\n\t\tfrom: ", i, "\tto: ", b)
         this_Tx <- Tx[i:b]
-        #cat("b: ", b, "\n")
-        #cat("dim this_Tx: ", dim(this_Tx), "\n")
         if(verbose) cat("\n\t\tpop_totals: ", sum(pop_totals), "\t")
         if(verbose) cat("sum Tx: ", sum(this_Tx, na.rm=T), "\n")
         if(sum(this_Tx, na.rm=T) != sum(pop_totals)){
@@ -777,49 +784,31 @@ alignWithTotals <- function(Tx, breaks, pop_totals, pos,
                 Tx[p, i:b] <- inflate(Tx, pop_totals, p, i, b, verbose=verbose)
             }
             if(verbose) cat(" ok")
-            #if(verbose){
-            #    cat("\n\t\tdiff: ", sum(Tx[i:b], na.rm=T) - sum(pop_totals))
-            #}
         }
         i = b+1
     }
-    #if(verbose) cat(" ok")
     return(Tx)
 }
 
 
-inflate <- function(Tx, pop_totals, p, i, b, verbose=F){
+inflate <- function(Tx, pop_totals, p, i, b, verbose=FALSE){
     Tx_row = Tx[p, i:b]
     Tx_row[is.na(Tx_row)] <- 0
     Tx_prop = colMeans(Tx[,i:b], na.rm=T)
-    #Tx_row[is.na(Tx_row)] <- colMeans(Tx[, is.na(Tx_row)])
     dif <- pop_totals[p,1] - sum(Tx_row, na.rm=T)
     dif_start <- dif
-    #if(verbose) cat("diff:", abs(dif))
-    #while(abs(dif) != 0){
-        #if(verbose) cat("diff:", dif)
-        #if(verbose) cat("prob:", paste(Tx[p, i:b]), "\n")
-        #if(verbose) cat(".")
-        samp <- sample(seq(i, b), abs(dif), replace=TRUE, prob=Tx_prop)
-        k = 0
-        for(j in seq(i,b)){
-            k = k + 1
-            if(dif > 0){
-                Tx_row[k] <- Tx[p, j] + length(samp[samp==j])
-            }else if(dif < 0){
-                Tx_row[k] <- Tx[p, j] - length(samp[samp==j])
-            }
+    samp <- sample(seq(i, b), abs(dif), replace=TRUE, prob=Tx_prop)
+    k = 0
+    for(j in seq(i,b)){
+        k = k + 1
+        if(dif > 0){
+            Tx_row[k] <- Tx[p, j] + length(samp[samp==j])
+        }else if(dif < 0){
+            Tx_row[k] <- Tx[p, j] - length(samp[samp==j])
         }
-        Tx_row[Tx_row<0] <- 0
-        dif <- pop_totals[p, 1] - sum(Tx_row, na.rm=T)
-        #if(dif >= dif_start){
-        #    if(verbose) cat("diff_start: ", abs(dif_start))
-        #    if(verbose) cat("diff: ", abs(dif))
-        #    stop("diff if bigger")
-        #}
-        #if(verbose) cat("diff:", abs(dif))
-    #}
-    #if(verbose) print(Tx_row)
+    }
+    Tx_row[Tx_row<0] <- 0
+    dif <- pop_totals[p, 1] - sum(Tx_row, na.rm=T)
     return(Tx_row)
 }
 

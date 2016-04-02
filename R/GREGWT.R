@@ -2,7 +2,8 @@
 #
 # 13.10.2014
 # last edit:
-# Mi 26 Aug 2015 11:46:05 AEST
+# Mi  26 Aug 2015 11:46:05    AEST
+# Sat 02 Apr 2016 11:56:02 PM CEST
 #
 
 
@@ -33,11 +34,11 @@
 #' to be define as a single value representing the total population of a single
 #' area.
 #' @param group (default = FALSE) position of the grouping variable, implies an
-#' integrated reweighting. 
+#' integrated reweighting.
 #' @param bounds (default = c(0,Inf)) defines the bounds of the estimated
 #' new weights.
 #' @param epsilon (default = 0.001) defines the desire precision of the model
-#' to achieve convergence. 
+#' to achieve convergence.
 #' @param max_iter (default = 10) maximum number of iterations to run
 #' @param cat_weights (default = FALSE, under development) weights for
 #' individual benchmarks. If not FALSE the function will compute individual
@@ -56,7 +57,7 @@
 #' library('GREGWT')
 #' data("GREGWT.census")
 #' data("GREGWT.survey")
-#' 
+#'
 #' simulation_data <- prepareData(
 #'   GREGWT.census, GREGWT.survey,
 #'   survey_id=FALSE,
@@ -64,40 +65,40 @@
 #'   census_categories=seq(2,24),
 #'   survey_categories=seq(1,3)
 #' )
-#' 
+#'
 #' # reweight for 4 areas
 #' areas <- c("02", "11", "04011", "04012")
 #' weights_GREGWT = GREGWT(data_in=simulation_data, area_code=areas)
 #' plot(weights_GREGWT)
-#' 
+#'
 #' # reweight and plot the results for a single area
 #' acode = "02"
 #' weights_GREGWT_02 <- GREGWT(data_in= simulation_data, area_code=acode)
-#' 
+#'
 #' plot(weights_GREGWT_02)
 #' print(weights_GREGWT_02)
 #' summary(weights_GREGWT_02)
 #'
-#' @author M. Estebna Munoz H.
+#' @author M. Esteban Munoz H.
 GREGWT <- function(x, ...) UseMethod("GREGWT")
 
-GREGWT.default <- function(data_in=FALSE,
-                           X_input=FALSE,
-                           X_complete_input=FALSE,
-                           Tx=FALSE,
-                           dx_input=FALSE,
-                           area_pop=FALSE,     # area population
-                           area_code=1,
-                           use_ginv=FALSE,
-                           group=FALSE,
-                           bounds=c(0,Inf),
-                           epsilon=0.001,
-                           max_iter=10,
-                           benchmark_weights=FALSE,
-                           align_pop=TRUE,
-                           error=TRUE,
-                           output_log=FALSE,
-                           verbose=FALSE){
+GREGWT.default <- function(data_in           = FALSE,
+                           X_input           = FALSE,
+                           X_complete_input  = FALSE,
+                           Tx                = FALSE,
+                           dx_input          = FALSE,
+                           area_pop          = FALSE,     # area population
+                           area_code         = 1,
+                           use_ginv          = FALSE,
+                           group             = FALSE,
+                           bounds            = c(0,Inf),
+                           epsilon           = 0.001,
+                           max_iter          = 10,
+                           benchmark_weights = FALSE,
+                           align_pop         = TRUE,
+                           error             = TRUE,
+                           output_log        = FALSE,
+                           verbose           = FALSE){
 
     if (output_log){
         log_con <- file("GREGWT.log")
@@ -113,9 +114,7 @@ GREGWT.default <- function(data_in=FALSE,
 
     if (verbose) cat("\nstart GREGWT, read variables")
     if (is.logical(data_in) &
-       !(is.logical(X_input)) &
-       !(is.logical(dx_input))
-       ){
+       !(is.logical(X_input)) & !(is.logical(dx_input))){
         if (verbose) cat("\nusing X_complete, Tx and dx")
         X_complete <- X_complete_input
         X_temp <- X_input
@@ -133,13 +132,14 @@ GREGWT.default <- function(data_in=FALSE,
     } else if (!(is.logical(data_in))){
         if (verbose) cat("\nusing data_in")
         X_complete  <- data_in$X_complete
-        X_temp <- data_in$X
-        dx <- data_in$dx
-        total_pop  <- data_in$total_pop
-        survey <- data_in$survey
+        X_temp i    <- data_in$X
+        dx          <- data_in$dx
+        total_pop   <- data_in$total_pop
+        survey      <- data_in$survey
     } else {
         stop("Either data_in or X_input and dx_input have to be define")
     }
+
 
     survey_id <- X_temp[colnames(X_temp) %in% "survey_id"]
     X <- X_temp[,!(colnames(X_temp) %in% "survey_id")]
@@ -174,11 +174,10 @@ GREGWT.default <- function(data_in=FALSE,
         cat("\n\tX_complete: ", dim(X_complete))
         if (!(is.null(dim(Tx)))){
             cat("\n\tTx: ", dim(Tx))
-            cat("\n\ttotal_pop: ", dim(total_pop)[1], dim(total_pop)[2])
         } else {
             cat("\n\tTx: ", length(Tx))
-            cat("\n\ttotal_pop: ", dim(total_pop)[1], dim(total_pop)[2])
         }
+        cat("\n\ttotal_pop: ", dim(total_pop)[1], dim(total_pop)[2])
         cat("\n\tdx: ", length(dx))
     }
     if(verbose) cat(" ... ok")
@@ -200,7 +199,7 @@ GREGWT.default <- function(data_in=FALSE,
     if(verbose) cat("\nget area population")
     if(is.logical(area_pop)){
         if(is.logical(total_pop)){
-            pop <- FALSE
+            pop       <- FALSE
             align_pop <- FALSE
             if(verbose) cat("\nunknown total population: ", pop)
         }else{
@@ -224,9 +223,9 @@ GREGWT.default <- function(data_in=FALSE,
     if(!(is.logical(pop))){
         # Add population vector
         X <- cbind(X, vector(length=dim(X)[1]) + 1)
-        colnames(X)[length(colnames(X))] <- "pop" 
+        colnames(X)[length(colnames(X))] <- "pop"
         X_complete <- cbind(X_complete, vector(length=dim(X)[1]) + 1)
-        colnames(X_complete)[length(colnames(X_complete))] <- "pop" 
+        colnames(X_complete)[length(colnames(X_complete))] <- "pop"
 
         # And the corresponding population benchmark to Tx
         if (is.null(dim(Tx))){
@@ -238,23 +237,24 @@ GREGWT.default <- function(data_in=FALSE,
         }
         names(Tx)[length(names(Tx))] <- "pop"
         names(Tx_complete)[length(names(Tx_complete))] <- "pop"
-        
+    } else {
+        if(verbose) cat("\nno population...")
     }
     if(verbose) cat(" ... ok")
 
     if(verbose) cat("\narrange data and data formats")
     constrains_complete <- names(Tx_complete)
-    constrains_names <- names(Tx)
-    constrains_names <- gsub("G.", "", constrains_names)
-    Tx <- as.matrix(Tx)
-    Tx_complete <- as.matrix(Tx_complete)
-    bounds <- as.numeric(bounds)
-    epsilon <- as.numeric(epsilon)
-    max_iter <- as.numeric(max_iter)
+    constrains_names    <- names(Tx)
+    constrains_names    <- gsub("G.", "", constrains_names)
+    Tx                  <- as.matrix(Tx)
+    Tx_complete         <- as.matrix(Tx_complete)
+    bounds              <- as.numeric(bounds)
+    epsilon             <- as.numeric(epsilon)
+    max_iter            <- as.numeric(max_iter)
     if(verbose) cat(" ... ok")
 
     if(verbose) cat("\nconvert NA to 0")
-    Tx[is.na(Tx)] <- 0
+    Tx[is.na(Tx)]                   <- 0
     Tx_complete[is.na(Tx_complete)] <- 0
 
     # get number of simulation areas
@@ -270,54 +270,58 @@ GREGWT.default <- function(data_in=FALSE,
             area_numbers <- dim(Tx)[1]
         }
     }
-   
+
     # loop throgh all simulation areas
     final_weights = as.numeric()
-    TAE <- as.numeric()
-    SAE <- as.numeric()
-    PSAE <- as.numeric()
-    TAD <- as.numeric()
-    DW <- as.numeric()
-    DChi2 <- as.numeric()
+    TAE    <- as.numeric()
+    SAE    <- as.numeric()
+    PSAE   <- as.numeric()
+    TAD    <- as.numeric()
+    DW     <- as.numeric()
+    DChi2  <- as.numeric()
     TDChi2 <- as.numeric()
-    Z <- as.numeric()
-    EM <- as.numeric()
-    ED <- as.numeric()
+    Z      <- as.numeric()
+    EM     <- as.numeric()
+    ED     <- as.numeric()
     for (i in seq(area_numbers)){
         if (verbose) cat("\n", "area_numbers -->", area_numbers, "\n")
         if (verbose) cat("\n", "loop --> ", i, "\n")
         if (area_numbers == 1){
-            area_code_i <- area_code
-            Tx_i <- Tx
+            area_code_i   <- area_code
+            Tx_i          <- Tx
             Tx_complete_i <- Tx_complete
-            pop_i <- pop
+            pop_i         <- pop
         } else {
-            area_code_i <- area_code[i]
-            Tx_i <- Tx[i, ]
+            area_code_i   <- area_code[i]
+            Tx_i          <- Tx[i, ]
             Tx_complete_i <- Tx_complete[i, ]
-            pop_i <- pop[i]
+            pop_i         <- pop[i]
         }
 
     # Divide initial weights by area population
     if(!(is.logical(pop_i))){
         if(verbose) cat("\ndivide initial weights by area population")
-        if(verbose) cat(" length(dx)", length(dx), "\n")
-        if(verbose) cat(" pop: ", pop_i, "\n")
+        if(verbose) cat("\nlength(dx)", length(dx))
+        if(verbose) cat("\npop: ",      pop_i, "\n")
         dx <- as.numeric(dx)
-        dx <- dx*pop_i/sum(dx)
+        dx <- alignPop(dx, pop_i)
+    } else {
+        if (!(is.logical(align_pop))){
+            dx <- alignPop(dx, sum(Tx)*align_pop)
+        }
     }
     if(verbose) cat(" length(dx)", length(dx))
     if(verbose) cat(" ... ok")
 
     # Group initial weights for integrated reweight
     dx_oinput <- dx
-    X_oinput <- X
+    X_oinput  <- X
     if(is.character(group)){
         if(verbose) cat("\ngroup weights for integrated reweighting\n")
-        dx <- groupDx(X, dx, group, pop_i)
+        dx <- groupDx(X, dx, group)
         if(verbose) cat(" length(dx-group): ", length(dx), "\n")
-        X <- groupX(X, group)
-        if(verbose) cat(" dim(X-group): ", dim(X), "\n")
+        X  <- groupX(X, group)
+        if(verbose) cat(" dim(X-group): ",     dim(X),     "\n")
     }else{
         dx_oinput=FALSE
     }
@@ -325,69 +329,66 @@ GREGWT.default <- function(data_in=FALSE,
 
     if(verbose) cat("\nGREGWT...")
     model_iter <- GREGWTest(X, dx, Tx_i, X_complete, Tx_complete, pop_i,
-                       survey_id=survey_id,
-                       use_ginv=use_ginv, 
-                       group=group,
-                       bounds=bounds,
-                       epsilon=epsilon,
-                       max_iter=max_iter,
-                       X_input=X_input,
-                       dx_oinput=dx_oinput,
-                       area_code=area_code_i,
-                       align_pop=align_pop,
-                       verbose=verbose)
+                       survey_id = survey_id,
+                       use_ginv  = use_ginv,
+                       group     = group,
+                       bounds    = bounds,
+                       epsilon   = epsilon,
+                       max_iter  = max_iter,
+                       X_input   = X_input,
+                       dx_oinput = dx_oinput,
+                       area_code = area_code_i,
+                       align_pop = align_pop,
+                       verbose   = verbose)
     if (verbose) cat(" ... ok")
 
-    model_iter$X <- X_oinput
-    model_iter$X_complete <- X_complete
-    model_iter$constrains <- constrains_names
+    model_iter$X                   <- X_oinput
+    model_iter$X_complete          <- X_complete
+    model_iter$constrains          <- constrains_names
     model_iter$constrains_complete <- constrains_complete
-    model_iter$survey <- survey
-    # loop
-    model_iter$Tx <- Tx_i
-    model_iter$Tx_complete <- Tx_complete_i
-    model_iter$pop <- pop_i
+    model_iter$survey              <- survey
+    model_iter$Tx                  <- Tx_i
+    model_iter$Tx_complete         <- Tx_complete_i
+    model_iter$pop                 <- pop_i
 
     if (error){
         model_iter <- computeError(model_iter, group, verbose=verbose)
-        TAE <- cbind(TAE, model_iter$TAE)
-        SAE <- cbind(SAE, model_iter$SAE)
-        PSAE <- cbind(PSAE, model_iter$PSAE)
-        TAD <- cbind(TAD, model_iter$TAD)
-        DW <- cbind(DW, model_iter$DW)
-        DChi2 <- cbind(DChi2, model_iter$DChi2)
-        TDChi2 <- cbind(TDChi2, model_iter$TDChi2)
-        Z <- cbind(Z, model_iter$Z)
-        EM <- cbind(EM, model_iter$EM)
-        ED <- cbind(ED, model_iter$ED)
+        TAE        <- cbind(TAE,    model_iter$TAE)
+        SAE        <- cbind(SAE,    model_iter$SAE)
+        PSAE       <- cbind(PSAE,   model_iter$PSAE)
+        TAD        <- cbind(TAD,    model_iter$TAD)
+        DW         <- cbind(DW,     model_iter$DW)
+        DChi2      <- cbind(DChi2,  model_iter$DChi2)
+        TDChi2     <- cbind(TDChi2, model_iter$TDChi2)
+        Z          <- cbind(Z,      model_iter$Z)
+        EM         <- cbind(EM,     model_iter$EM)
+        ED         <- cbind(ED,     model_iter$ED)
     } else {
         cat("\t|\n")
     }
 
     final_weights <- cbind(final_weights, model_iter$final_weights)
     } # end loop areas
-   
-    model <- model_iter #TODO: is error implemented
 
-    model$TAE <- rowMeans(TAE)
-    model$SAE <- rowMeans(SAE)
-    model$PSAE <- rowMeans(PSAE)
-    model$TAD <- mean(TAD)
-    model$DW <- mean(DW)
-    model$DChi2 <- mean(DChi2)
-    model$TDChi2 <- mean(TDChi2)
-    model$Z <- rowMeans(Z)
-
-    model$final_weights <- final_weights
-    model$input_weights <- model_iter$input_weights
-    model$Tx <- Tx
-    model$Tx_complete <- Tx_complete
-    model$pop <- pop
-    model$X <- X_oinput
-    model$X_complete <- X_complete
-    model$constrains <- constrains_names
+    model                     <- model_iter #TODO: is error implemented
+    model$TAE                 <- rowMeans(TAE)
+    model$SAE                 <- rowMeans(SAE)
+    model$PSAE                <- rowMeans(PSAE)
+    model$TAD                 <- mean(TAD)
+    model$DW                  <- mean(DW)
+    model$DChi2               <- mean(DChi2)
+    model$TDChi2              <- mean(TDChi2)
+    model$Z                   <- rowMeans(Z)
+    model$final_weights       <- final_weights
+    model$input_weights       <- model_iter$input_weights
+    model$Tx                  <- Tx
+    model$Tx_complete         <- Tx_complete
+    model$pop                 <- pop
+    model$X                   <- X_oinput
+    model$X_complete          <- X_complete
+    model$constrains          <- constrains_names
     model$constrains_complete <- constrains_complete
-    model$survey <- survey
+    model$survey              <- survey
 
     if (verbose){
         cat("\nprepare output")
@@ -397,8 +398,8 @@ GREGWT.default <- function(data_in=FALSE,
             cat("\n\t|--> length(Tx)           = ", length(Tx))
             cat("\n\t|--> length(Tx_complete)  = ", length(Tx_complete))
         } else {
-            cat("\n\t|--> dim(Tx)           = ", dim(Tx))
-            cat("\n\t|--> dim(Tx_complete)  = ", dim(Tx_complete))
+            cat("\n\t|--> dim(Tx)              = ", dim(Tx))
+            cat("\n\t|--> dim(Tx_complete)     = ", dim(Tx_complete))
         }
         cat("\n\t|--> length(constrains)   = ", length(constrains_names))
         cat("\n\t|--> length(constrains_c) = ", length(constrains_complete))
@@ -409,11 +410,9 @@ GREGWT.default <- function(data_in=FALSE,
         }
         cat("\n\t|--> dim(survey)          = ", dim(survey))
     }
-
     class(model) <- "GREGWT"
-
     if (output_log){
-        sink() 
+        sink()
         sink(type="message")
     }
     return(model)
@@ -422,17 +421,17 @@ GREGWT.default <- function(data_in=FALSE,
 
 GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
                       # Optional variables
-                      survey_id="survey_id",
-                      use_ginv=FALSE,
-                      group=FALSE,
-                      bounds=c(-Inf,Inf),
-                      epsilon=0.001,
-                      max_iter=10,
-                      X_input=FALSE,
-                      dx_oinput=FALSE,
-                      align_pop=TRUE,
-                      area_code="/",
-                      verbose=FALSE){
+                      survey_id = "survey_id",
+                      use_ginv  = FALSE,
+                      group     = FALSE,
+                      bounds    = c(-Inf,Inf),
+                      epsilon   = 0.001,
+                      max_iter  = 10,
+                      X_input   = FALSE,
+                      dx_oinput = FALSE,
+                      align_pop = TRUE,
+                      area_code = "/",
+                      verbose   = FALSE){
 
     # Save the aggregation ids
     X_g <- X
@@ -449,8 +448,7 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
 
     if(verbose){
         cat("\n\tget first lambda")
-        cat("\n\tdim(X)", dim(X))
-        #cat("\n\tcolnames(X)", colnames(X))
+        cat("\n\tdim(X)",     dim(X))
         cat("\n\tlength(dx)", length(dx))
     }
     # Lambda
@@ -470,18 +468,14 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
     number_iter = 0
     while(!convergence){
         number_iter = number_iter + 1
-
         # Get new weights
         wx = dx * (1 + X %*% lambda)  # New weights
-
         # Truncate weights
         wx[wx<bounds[1]] <- bounds[1]
         wx[wx>bounds[2]] <- bounds[2]
-        
-        # Truncate initial wights 
+        # Truncate initial wights
         dx[wx<bounds[1]] <- 0
         dx[wx>bounds[2]] <- 0
-       
         # Recompute lambda
         if(verbose) cat("\n\t\tNew Lambda")
         hTx <- colSums(X * as.numeric(wx), na.rm=T)  # Sample totals
@@ -490,7 +484,6 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
         lambdaO <- lambda
         # Compute new lambda
         lambda = lambda + lambdaS
-
         # Compute values for convergence
         if(all(Tx > epsilon)){
             #dlta_tx <- abs(Tx_complete - hTx_complete)
@@ -498,14 +491,13 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
             dlta_l  <- abs(lambdaS-lambdaO)
         }else{
             dlta_tx <- 0
-            dlta_l <- 0
+            dlta_l  <- 0
         }
-
+        # compute convergence
         convergence <- (
             all(dlta_tx < epsilon) |
             all(dlta_l <= epsilon) |
             number_iter >= max_iter)
-
         if(convergence){
             cat("| dTx | ",
                 format(max(dlta_tx), digits=2, scientific=T, width=7), "< ",
@@ -514,7 +506,7 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
             cat("| dAm | ",
                 format(max(dlta_l), digits=2, scientific=T, width=7), "<=",
                 format(epsilon, digits=2, scientific=T) ,"-> ")
-            cat(format(all(dlta_l <= epsilon), width=5), " ") 
+            cat(format(all(dlta_l <= epsilon), width=5), " ")
             cat("| itr: ", format(number_iter, digits=0, width=4), "")}
         }
     if(verbose) cat("ok")
@@ -522,30 +514,36 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
         cat("| NC | ")
     }else{
         cat("| OK | ")}
-
     cat("AC: ", format(area_code, scientific=FALSE))
-
+    # expand grouped data
     if(is.character(group)){
         if (verbose) cat("Expanding group ")
         weights_g <- expandGroup(X_g, wx, X_complete, group)
-        dx_output=dx_oinput
-        wx_output=weights_g
+        dx_output <- dx_oinput
+        wx_output <- weights_g
     }else{
-        dx_output=dx
-        wx_output=wx}
-
+        dx_output <- dx
+        wx_output <- wx
+    }
+    # align population total
     if(align_pop){
         if (verbose) cat("\npopulation alignment")
-        wx_output <- alignPop(wx_output, pop)
+        if (is.logical(pop)){
+            if (!(is.logical(align_pop))){
+                wx_output <- alignPop(wx_output, sum(Tx)*align_pop)
+                }
+        }else{
+            print(pop)
+            wx_output <- alignPop(wx_output, pop)
+        }
     }
     if (verbose) cat("\nbind index")
     wx_output <- cbind(survey_id, wx_output)
     colnames(wx_output) <- c("id", "w")
-
     return(list(input_weights=dx_output, final_weights=wx_output))
-} 
+}
 
-#TODO: document alignPop 
+#TODO: document alignPop
 
 #' @title alignPop
 #'
@@ -554,13 +552,12 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
 #' @param w new computed weights
 #' @param p population total
 #' @return wo align weights
-#' @author M. Estebna Munoz H.  
+#' @author M. Esteban Munoz H.
 #TODO: make example alignPop
 alignPop <- function(w, p){
-    #wo <- w + w / sum(w) * (p - sum(w))
     wo <- p * w / sum(w)
     return(wo)
-} 
+}
 
 
 getLambda <- function(X, dx, Tx, hTx, att_num, use_ginv, verbose=FALSE){
@@ -568,23 +565,21 @@ getLambda <- function(X, dx, Tx, hTx, att_num, use_ginv, verbose=FALSE){
     A <- crossprod(as.matrix(dx * X), as.matrix(X))
     if(verbose){
         cat("... ok")
-        if(sum(is.na(A))) cat("!!A contains NaN's!!")
-        if(sum(is.na(Tx))) cat("!!Tx contains NaN's!!")
+        if(sum(is.na(A)))   cat("!!A contains   NaN's!!")
+        if(sum(is.na(Tx)))  cat("!!Tx contains  NaN's!!")
         if(sum(is.na(hTx))) cat("!!hTx contains NaN's!!")
     }
     # A solution for 'A %*% lambda = (Tx - hTx)'
     if(use_ginv){
         if(verbose) cat("\n\t\t\tusing ginv ")
         if(verbose) cat("\n\t\tlength(Tx): ", length(Tx))
-        if(verbose) cat("\t\tlength(hTx): ", length(hTx))
+        if(verbose) cat("\t\tlength(hTx): ",  length(hTx))
         require('MASS')
         At <- ginv(A)
         lambda = At %*% (Tx - hTx)
         if(verbose) cat("ok")
     }else{
         if(verbose) cat("\n\t\t\tfind a solution for A ")
-        #A <- solve(A)
-        #lambda = A %*% (Tx - hTx)
         lambda <- solve(A, (Tx - hTx))   # Lagrange multipliers
         if(verbose) cat("ok")
     }
@@ -599,43 +594,61 @@ getLambda <- function(X, dx, Tx, hTx, att_num, use_ginv, verbose=FALSE){
 groupX <- function(X, group){
     X_g <- aggregate(X, by=list(X[,group]), FUN=sum)
     X_g <- X_g[names(X_g)!=group]
-    #X_g <- as.matrix(X_g)
-    return(X_g)}
+    return(X_g)
+}
 
 
 #TODO: divide initial weights by area population
-groupDx <- function(X_input, dx, group, pop){
+groupDx <- function(X_input, dx, group){
     dx_g <- aggregate(dx, by=list(X_input[,group]), FUN=sum)
     dx_g <- as.matrix(dx_g)
     dx_g <- as.numeric(dx_g[,"x"])
-    return(dx_g)}
+    return(dx_g)
+}
 
 
 #TODO: make example expandGroup
 expandGroup <- function(X_g, wx, X_input, group){
-    Origin <- X_g[,"Group.1"]
-    Grouped <- X_input[,group]
-    index <- match(Grouped, Origin, nomatch=0) 
+    Origin    <- X_g[,"Group.1"]
+    Grouped   <- X_input[,group]
+    index     <- match(Grouped, Origin, nomatch=0)
     weights_g <- wx[index]
-    return(weights_g)}
+    return(weights_g)
+}
 
 
+getTAE <- function(observed, simulated){
+    obs <- as.numeric(observed)
+    sim <- as.numeric(simulated)
+    TAE <- sum(abs(obs-sim))
+}
+
+
+#TODO: delete comments
 computeError <- function(model, group, verbose=FALSE){
     if(verbose) cat("\n compute error")
     model$call <- match.call()
     # Weights
     d <- model$input_weights
-    w <- model$final_weights
-    # Marginal sums 
+    w <- model$final_weights[,2]
+    # Marginal sums
     Tx <- model$Tx_complete
-    #cat("\n\n", dim(model$X_complete))
-    #cat("\n\n", length(w))
-    #print(head(model$X_complete * w))
+    #cat("\n\n")
+    #print(head(Tx))
+    #cat("\n\ndim(X)=", dim(model$X_complete))
+    #cat("\n\nlength(w)=", length(w), "\n")
+    #print(head(model$X_complete))
+    #print(colSums(model$X_complete * w)[model$constrains_complete])
+    #cat("\n\n")
     hTx <- colSums(model$X_complete * w)[model$constrains_complete]
     #cat("\nsum(X_c) = ", sum(model$X_complete))
     #cat("\nsum(X) = ", sum(model$X))
     #cat("\nsum(Tx) = ", sum(Tx))
+    #cat("\ndim(Tx) = ", dim(Tx))
     #cat("\nsum(hTx) = ", sum(hTx))
+    #cat("\ndim(hTx) = ", dim(hTx))
+    #cat("\nlength(hTx) = ", length(hTx))
+    #cat("\n")
     #cat("\nsum(w) = ", sum(w), "\n")
 
     #if(verbose){
@@ -646,7 +659,7 @@ computeError <- function(model, group, verbose=FALSE){
 
     # Compute the internal error of the computation
     # Total absolute error (TAE)
-    model$TAE <- abs(Tx-hTx)
+    model$TAE <- getTAE(Tx, hTx)
     cat(" | TAE:", format(sum(model$TAE),digits=2,scientific=T,width=7))
     # Standardized absolute error (SAE)
     model$SAE <- abs(Tx-hTx) / model$pop
@@ -682,13 +695,11 @@ computeError <- function(model, group, verbose=FALSE){
     model$ED <- abs(sum(d) - sum(w)) / sum(d)
 
     cat(" |\n")
-
-    return(model)}
+    return(model)
+}
 
 
 print.GREGWT <- function(x, ...){
-    #cat("Call:\n")
-    #print(x$call)
     cat("\nMean Weight Distance [mean(abs(w - d))]:\n")
     print(mean(x$DW))
     cat("\nMean Chi-squared Distance [mean(1/2 * (w * d)^2 / d)]:\n")
@@ -718,7 +729,8 @@ print.GREGWT <- function(x, ...){
     cat("\nError in distribution (ED) [abs(sum(d)-sum(w))/sum(d)]:\n")
     print(x$ED)
     cat("\nNew Weights. Access via: X$final_weights:\n")
-    print(paste(length(x$final_weights),"New weights"))}
+    print(paste(length(x$final_weights),"New weights"))
+}
 
 
 summary.GREGWT <- function(x, ...){
@@ -740,12 +752,13 @@ summary.GREGWT <- function(x, ...){
         #r2 = x$r2,
         #r2.adj = x$r2.adj,
         # 4 ######
-        Z = mean(x$Z), 
+        Z = mean(x$Z),
         EM = x$EM,
         ED = x$ED
         )
     class(res) <- "summary.GREGWT"
-    res}
+    return(res)
+}
 
 
 print.summary.GREGWT <- function(x, ...){
@@ -798,7 +811,7 @@ print.summary.GREGWT <- function(x, ...){
 
 
 plot.GREGWT <- function(x, ...){
-    layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
+    layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page
     names_y <- x$constrains_complete
     names_y <- gsub("G.", "", names_y)
     hTx <- colSums(
@@ -822,14 +835,14 @@ plot.GREGWT <- function(x, ...){
 
     if (dim(x$final_weights)[2] == 1){
         area_numbers <- 1
-        plot(as.numeric(x$final_weights), x$input_weights, 
+        plot(as.numeric(x$final_weights), x$input_weights,
              pch=".",
              ylab="Input Weights [d]",
              xlab="New Weights [w]",
              main="Initial and estimated new weights")
     } else {
         area_numbers <- dim(x$final_weights)[2]
-        plot(as.numeric(x$final_weights[,1]), x$input_weights, 
+        plot(as.numeric(x$final_weights[,1]), x$input_weights,
              pch=".",
              ylab="Input Weights [d]",
              xlab="New Weights [w]",
@@ -861,9 +874,9 @@ plot.GREGWT <- function(x, ...){
 #' @param file_name (default = FALSE) alternative file name to process, if
 #' FALSE the function will look for a file name GREGWT.log in the root folder.
 #'
-#' @author M. Estebna Munoz H.
+#' @author M. Esteban Munoz H.
 logtocsv <- function(file_name=FALSE){
-    file_name <- "GREGWT.log" 
+    file_name <- "GREGWT.log"
     data_table <- read.table(file_name)
     if (dim(data_table)[2] == 25){
         col_index <- c(24,8,16,19,21)
@@ -875,8 +888,8 @@ logtocsv <- function(file_name=FALSE){
                        "iterations", "convergence", "TAE", "PSAE")
     }
     data_table <- data_table[col_index]
-    names(data_table) <- col_names
-    data_table$area_code <- as.character(data_table$area_code)
+    names(data_table)      <- col_names
+    data_table$area_code   <- as.character(data_table$area_code)
     data_table$convergence <- as.character(data_table$convergence)
     data_table$convergence[data_table$convergence == "OK"] <- "TRUE"
     data_table$convergence[data_table$convergence == "NC"] <- "FALSE"
