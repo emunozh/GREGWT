@@ -4,7 +4,7 @@
 \alias{logtocsv}
 \title{logtocsv}
 \usage{
-logtocsv(file_name = FALSE)
+logtocsv(file_name = "GREGWT.log")
 }
 \arguments{
 \item{file_name}{(default = FALSE) alternative file name to process, if
@@ -16,6 +16,6 @@ with the output_log variable set to TRUE and generate a csv file on the same
 path called GREGWT_log.csv.
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 

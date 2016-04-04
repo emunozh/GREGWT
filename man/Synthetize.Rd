@@ -46,6 +46,12 @@ needed to reproduce results.}
 
 \item{output}{(default = FALSE) file to attached to the input survey.}
 
+\item{output_log}{(default = FALSE) create en output log of the simulation.
+This will create a file called Synthetic.out on the current working
+directory.  This option will suppress the output to the command line. You
+can process the output by calling the function logtocsv() provided by this
+package.}
+
 \item{verbose}{(default = FALSE) be verbose.}
 }
 \value{
@@ -55,6 +61,6 @@ result matrix of synthetic population.
 Create a synthetic population based on survey weights.
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 

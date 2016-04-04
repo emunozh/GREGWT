@@ -18,6 +18,6 @@ wo align weights
 #' Aligns the survey weights with the total population
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 

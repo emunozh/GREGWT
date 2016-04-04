@@ -4,12 +4,12 @@
 \alias{prepareData}
 \title{prepareData}
 \usage{
-prepareData(census, survey, census_area_id = 1, census_categories = FALSE,
-  survey_weights = FALSE, survey_id = 1, survey_categories = FALSE,
-  reference_col = FALSE, group = FALSE, convert = TRUE, na.rm = FALSE,
-  use_base = TRUE, breaks = FALSE, pop_benchmark = FALSE,
-  du_benchmark = FALSE, building_benchmark = FALSE, align = FALSE,
-  pop_total_col = FALSE, verbose = FALSE)
+prepareData(census, survey, census_area_id = 1, survey_id = 1,
+  convert = TRUE, use_base = TRUE, census_categories = FALSE,
+  survey_weights = FALSE, survey_categories = FALSE,
+  reference_col = FALSE, group = FALSE, na.rm = FALSE, breaks = FALSE,
+  pop_benchmark = FALSE, du_benchmark = FALSE, building_benchmark = FALSE,
+  align = FALSE, pop_total_col = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{census}{Census data of small areas.}
@@ -20,14 +20,19 @@ prepareData(census, survey, census_area_id = 1, census_categories = FALSE,
 area id in the census data. Define as `FALSE` if area code should be
 generated.}
 
-\item{census_categories}{(optional, default=FALSE) row names with categories
-to be used in the simulation.}
+\item{survey_id}{(optional, default=1) individual records id's. Define
+as `FALSE` to generate an id.}
+
+\item{convert}{(optional, default=TRUE) Converts data to binary format.}
+
+\item{use_base}{(optional, default=TRUE) use the model.matrix function form
+base R.}
+
+\item{census_categories}{(optional, default=FALSE) row names or row index
+of with categories to be used in the simulation.}
 
 \item{survey_weights}{(optional, default=FALSE) row name or row index of
 initial weights in the survey data. `FALSE` will use the last column.}
-
-\item{survey_id}{(optional, default=1) individual records id's. Define
-as `FALSE` to generate an id.}
 
 \item{survey_categories}{(optional, default=FALSE) survey categories to be
 used in the simulation.}
@@ -37,12 +42,7 @@ used in the simulation.}
 \item{group}{(optional, default=FALSE) Used variable to run an integrated
 re-weighting simulation.}
 
-\item{convert}{(optional, default=TRUE) Converts data to binary format.}
-
 \item{na.rm}{(optional, default=FALSE) remove records with nan values.}
-
-\item{use_base}{(optional, default=TRUE) use the model.matrix function form
-base R.}
 
 \item{breaks}{(optional, default=FALSE) define the beaks to calculate
 population totals, if FALSE population totals won't be computed}
@@ -79,7 +79,7 @@ area_id Small area ID.
 
 total_pop mean population totals for each area
 
-X_complete binary formated survey with all all categories
+X_complete binary formatted survey with all all categories
 
 Tx_complete marginal sums with all categories
 }

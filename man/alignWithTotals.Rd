@@ -22,6 +22,6 @@ align the census values to total population, the sum of all categories from
 all variables has to be equal to the population total.
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 

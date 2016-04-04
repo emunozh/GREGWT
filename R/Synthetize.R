@@ -40,9 +40,14 @@
 #' @param random_seed (default = 12345) seed for random number generator,
 #' needed to reproduce results.
 #' @param output (default = FALSE) file to attached to the input survey.
+#' @param output_log (default = FALSE) create en output log of the simulation.
+#' This will create a file called Synthetic.out on the current working
+#' directory.  This option will suppress the output to the command line. You
+#' can process the output by calling the function logtocsv() provided by this
+#' package.
 #' @param verbose (default = FALSE) be verbose.
 #' @return result matrix of synthetic population.
-#' @author M. Estebna Munoz H.
+#' @author M. Esteban Munoz H.
 #TODO: make example Synthetize
 Synthetize <- function(x, ...) UseMethod("Synthetize")
 
@@ -60,11 +65,18 @@ Synthetize.default <- function(
         fit_tolerance   = 0.1,
         random_seed     = 12345,
         verbose         = FALSE,
+        output_log      = FALSE,
         output          = FALSE){
 
     if (verbose) cat("Initiated\n")
     # set the random seed to ensure reproducibility
     set.seed(random_seed)
+
+    if (output_log){
+        log_con <- file("Snthetic.log")
+        sink(log_con, append=TRUE)
+        sink(log_con, append=TRUE, type="message")
+    }
 
     # which data to use
     if (is.logical(data_in)){
@@ -83,7 +95,7 @@ Synthetize.default <- function(
             }
         }
     } else {
-        survey <- data_in$X
+        survey <- data_in$X_complete
         nW <- dim(survey)[1]
         if (distribution == "uniform"){
             w <- runif(nW)
@@ -113,7 +125,7 @@ Synthetize.default <- function(
         cat("WARNING! no population\n")
     }
 
-    if (is.null(benchmarks)){
+    if (is.null(benchmarks) & !(is.logical(data_in))){
         benchmarks <- data_in$Tx_complete
         names(benchmarks) <- data_in$constrains_complete
     }
@@ -158,48 +170,146 @@ Synthetize.default <- function(
         cat("\n====================================\n")
     }
 
+    result = FALSE
     switch(method_input,
         "random"  = {result = randomSample() },
         "fbs"     = {result = fbs()          },
         "best"    = {result = findBest()     },
-        "bestpop" = {result = findBest()     },
-        result    = NULL)
-    if (verbose) cat("\nOK\n")
+        "bestpop" = {result = findBest()     }
+        )
 
+    if (is.logical(result)) stop("Method: <",
+                                 method_input,
+                                 "> not implemented")
+
+    # set weights to 1, each record represents one unit (w_i = 1 \forall i)
     weight_index <- unlist(
         lapply(colnames(result), function(x) grepl("weight", tolower(x))))
-
     if (sum(weight_index) > 0){
         if (verbose) print(weight_index)
         if (verbose) cat("\n dim(mode)", dim(result), "\n")
         result[, weight_index, ] <- 1
+    }
+    TAE_m <- getTAE_synth(result)
+    cat("\t\t\t\t\t\tmethod:", format(method_input, width=10),
+        "\t| itr: ", format(itr, digits=0, width=4) ,
+        "| Synth. pop --> | TAE:",
+        format((TAE), digits=2, scientific=T))
+    if (output_log){
+        sink()
+        sink(type="message")
     }
     return(result)
 }
 
 
 fbs <- function(){
-    FI <- Inf; FII <- Inf
-    #while (FI < 0 | FII < 0){
-    #}
+    if (verbose) cat("Using fbs method...\t")
+    result <- randomSample()
+    # (1) make integer weights
+    X <- getX()
+    wo <- rep(0, length(w))
+    inx <- sample(length(w), pop_size_input, replace=TRUE, prob=w)
+    wo[inx] <- 1
+    Tx <- benchmarks
+
+    l_FI <- Inf; l_FII <- Inf
+    # Start while loop
+    j <- 0
+    while (l_FI > 0 | l_FII > 0){
+        j <- j+1
+        # (2) compute hTx with integer weights
+        hTx <- colSums(X * wo, na.rm=TRUE)
+        TAE_sq = sum(abs(Tx - hTx))
+        # (3) compute R
+        R <- Tx - hTx
+        if (verbose) cat("\n|--> fbp loop ", j,
+                         "\tR:", sum(R^2),
+                         "\tTAE: ", TAE_sq)
+        # (4) compute FI and FII
+        FII <- vector(length=length(dim(X)[1]))
+        for (i in seq(1, dim(X)[1])) {
+            FII[i] <- sum(R^2 - (R + X[i,])^2)
+        }
+        X_sim <- X[inx,]
+        FI  <- vector(length=length(dim(X)[1]))
+        for (i in seq(1, dim(X_sim)[1])) {
+            FI[i]  <- sum(R^2 - (R - X_sim[i,])^2)
+        }
+        l_FI  <- length(FI[FI > 0])
+        l_FII <- length(FII[FII > 0])
+        if (verbose) cat("\n\t|--> length(FI): ", l_FI,
+                         "\tlength(FII): ", l_FII)
+        # (5) swap individuals on w
+        wo_temp <- wo
+        if (l_FI  > 0 & l_FII  > 0){
+            if (verbose) cat("\n\t\t|--> swap")
+            wo_temp[which(FI  == max(FI) )] <- 0
+            wo_temp[which(FII == max(FII))] <- 1
+            TAE_temp <- sum(abs(Tx - colSums(X * wo_temp, na.rm=TRUE)))
+            R_temp <- Tx - colSums(X * wo_temp, na.rm=TRUE)
+            if (verbose) cat("\tR: ", sum(R_temp^2), "\tTAE: ", TAE_temp)
+        } else if (l_FI <= 0 & l_FII  > 0){
+            if (verbose) cat("\n\t\t|--> random swap")
+            wo_temp[sampleW(FI)] <- 0
+            wo_temp[which(FII == max(FII))] <- 1
+            TAE_temp <- sum(abs(Tx - colSums(X * wo_temp, na.rm=TRUE)))
+            R_temp <- Tx - colSums(X * wo_temp, na.rm=TRUE)
+            if (verbose) cat("\tR: ", sum(R_temp^2), "\tTAE: ", TAE_temp)
+        } else if (l_FII <= 0){
+            if (verbose) cat("\n\t\t|--> no swap END")
+            TAE_temp <- sum(abs(Tx - colSums(X * wo_temp, na.rm=TRUE)))
+            R_temp <- Tx - colSums(X * wo_temp, na.rm=TRUE)
+            if (verbose) cat("\tR: ", sum(R_temp^2), "\tTAE: ", TAE_temp)
+            break
+        }
+        # (6) accept of reject change
+        if (TAE_temp < TAE_sq){
+            wo <- wo_temp
+        } else {
+            break
+        }
+    } # end while loop
+    assign("itr", j, envir = .GlobalEnv)
+    if (verbose) cat("OK\n")
+    return(result)
+}
+
+
+sampleW <- function(x) {
+  if (length(x) == 1) {
+    return(x)
+  } else {
+    return(sample(x,1))
+  }
+}
+
+
+getFittValues <- function(Tx, X, w){
+    hTx <- colSums(X * w, na.rm=TRUE)
+    R <- Tx - hTx
+    FI <- R^2 - (R - X)^2
 }
 
 
 randomSample <- function(){
+    if (verbose) cat("\nMake random sample...")
     result <- prepareResult()
     for (i in seq(1, n_samples)) {
-        if (verbose) cat("\n\t|-->sample ", i, "/", n_samples)
+        if (verbose) cat("\n\t|--> sample ", i, "/", n_samples)
         index_survey <- sample(
             nrow(survey), pop_size_input, replace=TRUE, prob=w)
         synthetic_pop <- survey[index_survey, ]
         result[,,i] <- as.matrix(synthetic_pop)
     }
+    assign("itr", n_samples, envir = .GlobalEnv)
     return(result)
 }
 
 
 prepareResult <- function(){
     # create the result array
+    if (verbose) cat("\n\t|--> Prepare result...\t")
     result=array(NaN, dim=c(pop_size_input, dim(survey)[2], n_samples))
     dimnames(result) <- list(NULL,colnames(survey),NULL)
 
@@ -208,11 +318,12 @@ prepareResult <- function(){
         if (verbose) cat("\ngrouped data\n")
         result <- unGroupData(result)
     }
-    if (verbose) cat("\nOK\n")
+    if (verbose) cat("OK\t")
     return(result)
 }
 
 
+#TODO: fix grouped data
 unGroupData <- function(result){
     X_g    <- data.frame(HHid  =survey[, group],
                          HHsize=(vector(length=dim(survey)[1])+1))
@@ -306,25 +417,7 @@ fillPop <- function(synthetic.pop, expected.dim){
 
 findBest <- function(){
     result <- randomSample()
-    # select only columns to benchmak to
-    bench_names <- names(benchmarks)
-    result_name <- dimnames(result)[[2]]
-    index <- sapply(result_name, "%in%", bench_names)
-    c_sums <- result[, index, ]
-
-    # get the sample marginal totals for the computation of TAE
-    if (dim(result)[1]==1){
-        # If there is a single person in the sample
-        TAE_sample <- sum(colSums(c_sums, na.rm=TRUE))
-    } else {
-        TAE_sample <- colSums(colSums(c_sums, na.rm=TRUE))
-    }
-
-    # get the marginal totals from the benchmarks for the computation of the
-    # TAE
-    TAE_benchm <- sum(benchmarks)
-    # compute the TAE
-    TAE_m <- abs(TAE_sample - TAE_benchm)
+    TAE_m <- getTAE_synth(result)
     # get the min TAE index
     TAE_index <- which(TAE_m == min(TAE_m))
 
@@ -346,4 +439,45 @@ findBest <- function(){
         result_index <- TAE_index
     }
     return(result[,,result_index[1]])
+}
+
+
+getX <- function(){
+    if (verbose) cat("\nPrepare survey data...")
+    bench_names <- names(benchmarks)
+    survey_names <- dimnames(survey)[[2]]
+    index <- sapply(survey_names, "%in%", bench_names)
+    X <- survey[, index]
+}
+
+
+gethTx <- function(result){
+    # select only columns to benchmarks to
+    bench_names <- names(benchmarks)
+    result_name <- dimnames(result)[[2]]
+    index <- sapply(result_name, "%in%", bench_names)
+    c_sums <- result[, index, ]
+
+    # get the sample marginal totals for the computation of TAE
+    if (dim(result)[1]==1 | dim(result)[3]==1){
+        # If there is a single person in the sample
+        # or a single iteration
+        TAE_sample <- sum(colSums(c_sums, na.rm=TRUE))
+    } else {
+        TAE_sample <- colSums(colSums(c_sums, na.rm=TRUE))
+    }
+    return(TAE_sample)
+}
+
+
+getTAE_synth <- function(result){
+    TAE_sample <- gethTx(result)
+    # get the marginal totals from the benchmarks for the computation of the
+    # TAE
+    TAE_benchm <- sum(benchmarks)
+    # compute the TAE
+    TAE_m <- abs(TAE_sample - TAE_benchm)
+
+    assign("TAE", min(TAE_m), envir = .GlobalEnv)
+    return(TAE_m)
 }

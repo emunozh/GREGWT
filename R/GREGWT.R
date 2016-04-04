@@ -132,14 +132,13 @@ GREGWT.default <- function(data_in           = FALSE,
     } else if (!(is.logical(data_in))){
         if (verbose) cat("\nusing data_in")
         X_complete  <- data_in$X_complete
-        X_temp i    <- data_in$X
+        X_temp      <- data_in$X
         dx          <- data_in$dx
         total_pop   <- data_in$total_pop
         survey      <- data_in$survey
     } else {
         stop("Either data_in or X_input and dx_input have to be define")
     }
-
 
     survey_id <- X_temp[colnames(X_temp) %in% "survey_id"]
     X <- X_temp[,!(colnames(X_temp) %in% "survey_id")]
@@ -196,13 +195,13 @@ GREGWT.default <- function(data_in           = FALSE,
     #}
 
     # Get total area population
-    if(verbose) cat("\nget area population")
-    if(is.logical(area_pop)){
-        if(is.logical(total_pop)){
+    if (verbose) cat("\nget area population")
+    if (is.logical(area_pop)){
+        if (is.logical(total_pop)){
             pop       <- FALSE
             align_pop <- FALSE
             if(verbose) cat("\nunknown total population: ", pop)
-        }else{
+        } else {
             if (length(area_code) == 1){
                 pop <- total_pop[which(total_pop$area_id==area_code), ]
                 pop <- pop$pop
@@ -210,17 +209,17 @@ GREGWT.default <- function(data_in           = FALSE,
                 pop <- total_pop[total_pop$area_id %in% area_code, ]
                 pop <- pop$pop
             }
-            if(verbose) cat("\nusing total population by area_id: ",
+            if (verbose) cat("\nusing total population by area_id: ",
                             area_code, pop)
         }
-    }else{
+    } else {
         pop <- area_pop
-        if(verbose) cat("\nusing variable <area_pop>: ", pop)
+        if (verbose) cat("\nusing variable <area_pop>: ", pop)
     }
-    if(verbose) cat("\npopulation: ", pop)
-    if(verbose) cat(" ... ok")
+    if (verbose) cat("\npopulation: ", pop)
+    if (verbose) cat(" ... ok")
 
-    if(!(is.logical(pop))){
+    if (!(is.logical(pop))){
         # Add population vector
         X <- cbind(X, vector(length=dim(X)[1]) + 1)
         colnames(X)[length(colnames(X))] <- "pop"
@@ -293,8 +292,8 @@ GREGWT.default <- function(data_in           = FALSE,
             pop_i         <- pop
         } else {
             area_code_i   <- area_code[i]
-            Tx_i          <- Tx[i, ]
-            Tx_complete_i <- Tx_complete[i, ]
+            Tx_i          <- as.matrix(Tx[i, ])
+            Tx_complete_i <- as.matrix(Tx_complete[i, ])
             pop_i         <- pop[i]
         }
 
@@ -452,7 +451,7 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
         cat("\n\tlength(dx)", length(dx))
     }
     # Lambda
-    hTx <- colSums(X * dx, na.rm=T)  # Sample totals
+    hTx    <- colSums(X * dx, na.rm=T)  # Sample totals
     lambda <- getLambda(X, dx, Tx, hTx, att_num, use_ginv, verbose=verbose)
 
     if(is.na(sum(lambda))){
@@ -533,7 +532,6 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
                 wx_output <- alignPop(wx_output, sum(Tx)*align_pop)
                 }
         }else{
-            print(pop)
             wx_output <- alignPop(wx_output, pop)
         }
     }
@@ -621,6 +619,7 @@ getTAE <- function(observed, simulated){
     obs <- as.numeric(observed)
     sim <- as.numeric(simulated)
     TAE <- sum(abs(obs-sim))
+    return(TAE)
 }
 
 
@@ -633,29 +632,21 @@ computeError <- function(model, group, verbose=FALSE){
     w <- model$final_weights[,2]
     # Marginal sums
     Tx <- model$Tx_complete
-    #cat("\n\n")
-    #print(head(Tx))
-    #cat("\n\ndim(X)=", dim(model$X_complete))
-    #cat("\n\nlength(w)=", length(w), "\n")
-    #print(head(model$X_complete))
-    #print(colSums(model$X_complete * w)[model$constrains_complete])
-    #cat("\n\n")
-    hTx <- colSums(model$X_complete * w)[model$constrains_complete]
-    #cat("\nsum(X_c) = ", sum(model$X_complete))
-    #cat("\nsum(X) = ", sum(model$X))
-    #cat("\nsum(Tx) = ", sum(Tx))
-    #cat("\ndim(Tx) = ", dim(Tx))
-    #cat("\nsum(hTx) = ", sum(hTx))
-    #cat("\ndim(hTx) = ", dim(hTx))
-    #cat("\nlength(hTx) = ", length(hTx))
-    #cat("\n")
-    #cat("\nsum(w) = ", sum(w), "\n")
-
-    #if(verbose){
-    #    cat("\n Tx:")
-    #    print(class(Tx))
-    #}
-    #Tx <- Tx[, order(colnames(Tx))]
+    if (dim(Tx)[1] > dim(Tx)[2]){
+        Tx <- Tx[sort(rownames(Tx)), ]
+    } else {
+        Tx <- Tx[, sort(colnames(Tx))]
+    }
+    hTx <- t(colSums(model$X_complete * w)[model$constrains_complete])
+    hTx <- hTx[,sort(colnames(hTx))]
+    if (verbose){
+        #hTx <- colSums(X * as.numeric(wx_output), na.rm=T)  # Sample totals
+        cat("\n###############################################\n")
+        Tx_diff <- cbind(Tx, hTx)
+        colnames(Tx_diff) <- c("Tx", "hTx")
+        print(Tx_diff)
+        cat("\n###############################################\n")
+    }
 
     # Compute the internal error of the computation
     # Total absolute error (TAE)
@@ -668,13 +659,13 @@ computeError <- function(model, group, verbose=FALSE){
     model$PSAE <- model$SAE * 100
     cat(" | PSAE:", format(sum(model$PSAE),digits=2,scientific=T,width=7))
     ## Correlation Coefficient (Pearson Correlation)
-    #model$pearson <- cor(cbind(Tx, hTx), use="complete.obs", method="pearson")
+    model$pearson <- cor(cbind(Tx, hTx), use="complete.obs", method="pearson")
     ## Independent samples t-Test
-    #model$ttest <- t.test(Tx, hTx)
+    model$ttest <- t.test(Tx, hTx)
     ## Coefficient of determination
-    #lm.X <- lm(Tx~hTx)
-    #model$r2 <- summary(lm.X)$r.squared
-    #model$r2.adj <- summary(lm.X)$adj.r.squared
+    lm.X <- lm(Tx~hTx)
+    model$r2 <- summary(lm.X)$r.squared
+    model$r2.adj <- summary(lm.X)$adj.r.squared
 
     # Total absolute distance (TAD)
     model$TAD <- sum(abs(w-d))
@@ -714,14 +705,14 @@ print.GREGWT <- function(x, ...){
     print(x$SAE)
     cat("\nPercentage absolute error [SAE * 100]:\n")
     print(x$PSAE)
-    #cat(Correlation Coefficient (Pearson Correlation))
-    #print(x$pearson)
-    #cat("\nIndependent samples t-Test [t.test(Tx, hTx)]:\n")
-    #print(x$ttest)
-    #cat("\nR squared (Tx~hTx):\n")
-    #print(x$r2)
-    #cat("\nAdjusted R squared:\n")
-    #print(x$r2.adj)
+    cat("\nCorrelation Coefficient (Pearson Correlation):\n")
+    print(x$pearson)
+    cat("\nIndependent samples t-Test [t.test(Tx, hTx)]:\n")
+    print(x$ttest)
+    cat("\nR squared (Tx~hTx):\n")
+    print(x$r2)
+    cat("\nAdjusted R squared:\n")
+    print(x$r2.adj)
     cat("\nModified z-statistic [Z = (r-p)/sqrt(p*(1-p)/sum(Tx))]:\n")
     print(x$Z)
     cat("\nError in margin (EM) [(sum(d)-sum(w))/sum(d)]:\n")
@@ -747,10 +738,10 @@ summary.GREGWT <- function(x, ...){
         SAE = sum(x$SAE),
         PSAE = mean(x$PSAE),
         # 3 ######
-        #p.val.ttest = ttest$p.value,
-        #pearson = mean(x$pearson[x$pearson==1]),
-        #r2 = x$r2,
-        #r2.adj = x$r2.adj,
+        p.val.ttest = ttest$p.value,
+        pearson = mean(x$pearson[x$pearson==1]),
+        r2 = x$r2,
+        r2.adj = x$r2.adj,
         # 4 ######
         Z = mean(x$Z),
         EM = x$EM,
@@ -763,48 +754,48 @@ summary.GREGWT <- function(x, ...){
 
 print.summary.GREGWT <- function(x, ...){
     TWidth = 10
-    #cat("Call:\n")
-    #print(x$call)
+    cat("Call:\n")
+    print(x$call)
     cat("\n================================================\n")
-    cat(format("TAD", width=TWidth), "|")
-    cat(format("M.Weight.D", width=TWidth), "|")
-    cat(format("M.Chi2.D", width=TWidth), "|")
-    cat(format("T.Chi2.D", width=TWidth), "|")
+    cat(format("TAD",                                width=TWidth), "|")
+    cat(format("M.Weight.D",                         width=TWidth), "|")
+    cat(format("M.Chi2.D",                           width=TWidth), "|")
+    cat(format("T.Chi2.D",                           width=TWidth), "|")
     cat("\n------------------------------------------------\n")
-    cat(format(x$TAD, digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$TAD,        digits=2, scientific=T, width=TWidth), "|")
     cat(format(x$M.Weight.D, digits=2, scientific=T, width=TWidth), "|")
-    cat(format(x$M.Chi2.D, digits=2, scientific=T, width=TWidth), "|")
-    cat(format(x$T.Chi2.D, digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$M.Chi2.D,   digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$T.Chi2.D,   digits=2, scientific=T, width=TWidth), "|")
     cat("\n------------------------------------------------\n")
-    cat(format("TAE", width=TWidth), "|")
-    cat(format("SAE", width=TWidth), "|")
-    cat(format("PSAE", width=TWidth), "|")
-    cat(format("", width=TWidth), "|")
+    cat(format("TAE",                                width=TWidth), "|")
+    cat(format("SAE",                                width=TWidth), "|")
+    cat(format("PSAE",                               width=TWidth), "|")
+    cat(format("",                                   width=TWidth), "|")
     cat("\n------------------------------------------------\n")
-    cat(format(x$TAE, digits=2, scientific=T, width=TWidth), "|")
-    cat(format(x$SAE, digits=2, scientific=T, width=TWidth), "|")
-    cat(format(x$PSAE, digits=2, scientific=T, width=TWidth), "|")
-    cat(format("", width=TWidth), "|")
+    cat(format(x$TAE,        digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$SAE,        digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$PSAE,       digits=2, scientific=T, width=TWidth), "|")
+    cat(format("",                                   width=TWidth), "|")
     cat("\n------------------------------------------------\n")
-    #cat(format("t-Test", width=TWidth), "|")
-    #cat(format("M.Pearson", width=TWidth), "|")
-    #cat(format("R2", width=TWidth), "|")
-    #cat(format("adj R2", width=TWidth), "|")
-    #cat("\n------------------------------------------------\n")
-    #cat(format(x$p.val.ttest, digits=2, scientific=T, width=TWidth), "|")
-    #cat(format(x$pearson, digits=2, scientific=T, width=TWidth), "|")
-    #cat(format(x$r2, digits=2, scientific=T, width=TWidth), "|")
-    #cat(format(x$r2.adj, digits=2, scientific=T, width=TWidth), "|")
-    #cat("\n------------------------------------------------\n")
-    cat(format("M.Z", width=TWidth), "|")
-    cat(format("EM", width=TWidth), "|")
-    cat(format("ED", width=TWidth), "|")
-    cat(format("", width=TWidth), "|")
+    cat(format("t-Test",                             width=TWidth), "|")
+    cat(format("M.Pearson",                          width=TWidth), "|")
+    cat(format("R2",                                 width=TWidth), "|")
+    cat(format("adj R2",                             width=TWidth), "|")
     cat("\n------------------------------------------------\n")
-    cat(format(x$Z, digits=2, scientific=T, width=TWidth), "|")
-    cat(format(x$EM, digits=2, scientific=T, width=TWidth), "|")
-    cat(format(x$ED, digits=2, scientific=T, width=TWidth), "|")
-    cat(format("", width=TWidth), "|")
+    cat(format(x$p.val.ttest, digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$pearson,     digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$r2,          digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$r2.adj,      digits=2, scientific=T, width=TWidth), "|")
+    cat("\n------------------------------------------------\n")
+    cat(format("M.Z",                                width=TWidth), "|")
+    cat(format("EM",                                 width=TWidth), "|")
+    cat(format("ED",                                 width=TWidth), "|")
+    cat(format("",                                   width=TWidth), "|")
+    cat("\n------------------------------------------------\n")
+    cat(format(x$Z,          digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$EM,         digits=2, scientific=T, width=TWidth), "|")
+    cat(format(x$ED,         digits=2, scientific=T, width=TWidth), "|")
+    cat(format("",                                   width=TWidth), "|")
     cat("\n================================================\n")
     #printCoefmat(x$Distance)
 }
@@ -814,19 +805,18 @@ plot.GREGWT <- function(x, ...){
     layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page
     names_y <- x$constrains_complete
     names_y <- gsub("G.", "", names_y)
-    hTx <- colSums(
-        x$final_weights * x$X_complete, na.rm=T)
-    Tx <- x$Tx_complete
-    #PSAE <- as.numeric(abs(Tx-hTx)/length(x$final_weights)*100)
-    #PSAE <- x$PSAE
-    PSAE <- abs(Tx-hTx) / x$pop * 100
+    hTx     <- colSums(x$final_weights * x$X_complete, na.rm=T)
+    Tx      <- x$Tx_complete
+    #PSAE    <- as.numeric(abs(Tx-hTx)/length(x$final_weights)*100)
+    #PSAE    <- x$PSAE
+    PSAE    <- abs(Tx-hTx) / x$pop * 100
     barplot(PSAE,
             names.arg=names_y,
             main="Percentage Error of model constrains",
             ylab="PSAE = (Tx - hTx)/n*100", xlab="")
     # Z-statistic
-    r = hTx/sum(Tx, na.rm=T)
-    p = Tx/sum(Tx, na.rm=T)
+    r <- hTx/sum(Tx, na.rm=T)
+    p <- Tx/sum(Tx, na.rm=T)
     Z <- (r-p)/sqrt(p*(1-p)/sum(Tx, na.rm=T))
     barplot(Z,
             names.arg=names_y,
@@ -850,7 +840,8 @@ plot.GREGWT <- function(x, ...){
         for (i in seq(2, area_numbers)){
             points(as.numeric(x$final_weights[, i]),
                 x$input_weights, col=i, pch=".")
-    }}
+        }
+    }
     abline(0,1,col="red")
 
     plot(sort(as.numeric(
@@ -875,7 +866,7 @@ plot.GREGWT <- function(x, ...){
 #' FALSE the function will look for a file name GREGWT.log in the root folder.
 #'
 #' @author M. Esteban Munoz H.
-logtocsv <- function(file_name=FALSE){
+logtocsv <- function(file_name="GREGWT.log"){
     file_name <- "GREGWT.log"
     data_table <- read.table(file_name)
     if (dim(data_table)[2] == 25){

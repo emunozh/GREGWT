@@ -43,6 +43,6 @@ data("GREGWT.census")
 total_pop <- getPopulation(GREGWT.census, c(11,17), area_id_pos=1)
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 

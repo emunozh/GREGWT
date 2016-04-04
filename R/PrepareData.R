@@ -2,6 +2,7 @@
 #
 # 04.02.2015
 # last edit: 20.04.2015
+# Mon 04 Apr 2016 02:16:15 PM CEST
 #
 
 
@@ -102,28 +103,34 @@ prepareData <- function(census, survey,            # require input data
     pop_total_col      = FALSE, # population totals
     verbose            = FALSE  # be verbose
                         ){
-    if(verbose){
+    if (verbose){
         cat("preparing data --> ")
         cat("\ndim(survey):", dim(survey))
         cat("\ndim(census):", dim(census))
     }
 
-    if(class(group) != "logical"){group_id <- survey[group]}
+    if (class(group) != "logical"){
+        group_id <- survey[group]
+        survey <- survey[!(names(survey) %in% group)]
+    }
 
     ### Format data census
     # get id pos pop
-    area <- getAreaid(census, census_area_id=census_area_id, breaks=breaks,
-                      pop_benchmark=pop_benchmark,
-                      du_benchmark=du_benchmark,
-                      building_benchmark=building_benchmark,
-                      pop_total_col=pop_total_col, verbose=verbose)
+    area <- getAreaid(census,
+                      census_area_id     = census_area_id,
+                      breaks             = breaks,
+                      pop_benchmark      = pop_benchmark,
+                      du_benchmark       = du_benchmark,
+                      building_benchmark = building_benchmark,
+                      pop_total_col      = pop_total_col,
+                      verbose            = verbose
+                      )
 
     ### Filter data
-    filtered <- filterData(census, census_categories,
-                           census_area_id,
-                           survey, survey_categories,
-                           survey_weights, survey_id,
-                           na.rm, verbose=verbose)
+    filtered <- filterData(census, census_categories, census_area_id,
+                           survey, survey_categories, survey_id,
+                           survey_weights, na.rm,
+                           verbose=verbose)
     Tx <- filtered$Tx
     dx <- filtered$dx
     survey_id <- filtered$survey_id
@@ -224,9 +231,15 @@ prepareData <- function(census, survey,            # require input data
     Txo <- as.matrix(Txo)
 
     if (verbose) cat("data:OK\n")
-    prepared.data <- list(X=Xo, Tx=Txo, dx=dx, breaks=breaks,
-                          X_complete=X_complete, Tx_complete=Tx_complete,
-                          area_id=area$id, total_pop=area$pop, survey=survey)
+    prepared.data <- list(X           = Xo,
+                          Tx          = Txo,
+                          dx          = dx,
+                          breaks      = breaks,
+                          X_complete  = X_complete,
+                          Tx_complete = Tx_complete,
+                          area_id     = area$id,
+                          total_pop   = area$pop,
+                          survey      = survey)
     class(prepared.data) <- "prepareData"
     return(prepared.data)
 }
@@ -292,26 +305,26 @@ printBreaks <- function(names_tx, breaks, name="all"){
 #' @author M. Esteban Munoz H.
 #TODO: examples
 getAreaid <- function(census,
-                      census_area_id    = FALSE,
-                      breaks            = FALSE,
-                      pop_benchmark     = FALSE,
-                      du_benchmark      = FALSE,
-                      building_benchmark= FALSE,
-                      pop_total_col     = FALSE,
-                      verbose           = FALSE
+                      census_area_id     = FALSE,
+                      breaks             = FALSE,
+                      pop_benchmark      = FALSE,
+                      du_benchmark       = FALSE,
+                      building_benchmark = FALSE,
+                      pop_total_col      = FALSE,
+                      verbose            = FALSE
                       ){
     if(verbose) cat("\n\t|--> get area id --> ")
     if(class(census_area_id) %in% c("numeric", "integer")){
-        if (verbose) cat("by possition (", names(census)[census_area_id], ")")
-        area_id <- census[census_area_id]
+        if (verbose) cat("by position (", names(census)[census_area_id], ")")
+        area_id     <- census[census_area_id]
         area_id_pos <- census_area_id
     }else if(is.logical(census_area_id)){
         if (verbose) cat("created new")
-        area_id <- as.data.frame(seq(dim(census)[1]))
+        area_id     <- as.data.frame(seq(dim(census)[1]))
         area_id_pos <- census_area_id
     }else{
         if (verbose) cat("by name (", census_area_id, ")")
-        area_id <- census[names(census) %in% census_area_id]
+        area_id     <- census[names(census) %in% census_area_id]
         area_id_pos <- which(names(census) == census_area_id)
     }
     # Compute population totals
@@ -319,15 +332,17 @@ getAreaid <- function(census,
         total_pop <- FALSE
     }else{
         total_pop <- getPopulation(census, breaks,
-                                   area_id=area_id,
-                                   area_id_pos=area_id_pos,
-                                   pop_benchmark=pop_benchmark,
-                                   du_benchmark=du_benchmark,
-                                   building_benchmark=building_benchmark,
-                                   pop_total_col=pop_total_col,
-                                   verbose=verbose)}
+                                   area_id            = area_id,
+                                   area_id_pos        = area_id_pos,
+                                   pop_benchmark      = pop_benchmark,
+                                   du_benchmark       = du_benchmark,
+                                   building_benchmark = building_benchmark,
+                                   pop_total_col      = pop_total_col,
+                                   verbose            = verbose
+                                   )}
     if(verbose) cat("ok ")
-    list(id=area_id, pos=area_id_pos, pop=total_pop)}
+    list(id=area_id, pos=area_id_pos, pop=total_pop)
+}
 
 
 #' @title getPopulation
@@ -368,74 +383,74 @@ getPopulation <- function(Tx, breaks,
                           ){
 
     Tx_for_pop <- Tx
-    if(verbose) cat("\n\t\t|--> get population totals --> ")
-    if(!(is.logical(area_id_pos))) {
-        if(verbose) cat("\n\t\t\t|--> got area id position --> ")
-        area_id_dat <- Tx[area_id_pos]
-        Tx <- Tx[-area_id_pos]
-        if(verbose) cat("ok ")
-    }else if(is.logical(area_id_pos) & is.logical(area_id)){
+    if (verbose) cat("\n\t\t|--> get population totals --> ")
+    if (!(is.logical(area_id_pos))) {
+        if (verbose) cat("\n\t\t\t|--> got area id position --> ")
+        area_id_dat <- Tx[ area_id_pos]
+        Tx          <- Tx[-area_id_pos]
+        if (verbose) cat("ok ")
+    } else if (is.logical(area_id_pos) & is.logical(area_id)){
         stop("To compute the population total this function needs either:
     (a) the position of the area id area_id_pos=int; or
     (b) a vector with the area id area_id=vector()")
-    }else if(!(is.logical(area_id))){
-        if(verbose) cat("\n\t\t\t|--> got area id name --> ", area_id)
+    } else if (!(is.logical(area_id))){
+        if (verbose) cat("\n\t\t\t|--> got area id name --> ", area_id)
         area_id_dat <- Tx[which(names(Tx) == area_id)]
-        Tx <- Tx[which(names(Tx) != area_id)]
-        if(verbose) cat("ok ")
+        Tx          <- Tx[which(names(Tx) != area_id)]
+        if (verbose) cat("ok ")
     }
 
     pop_sums_t <- FALSE
-    if(class(pop_total_col) != "logical"){
-        if(verbose) cat("\n\t\t\t|--> got total population column --> ")
+    if (class(pop_total_col) != "logical"){
+        if (verbose) cat("\n\t\t\t|--> got total population column --> ")
         pop_sums_t <- rowSums(Tx[pop_total_col])
-        if(verbose) cat("ok ")
+        if (verbose) cat("ok ")
     }
 
-    if(class(building_benchmark) != "logical"){
+    if (class(building_benchmark) != "logical"){
         building_sums <- computeTotal(Tx_for_pop,
                                       building_benchmark,
-                                      name="bui",
-                                      verbose=verbose)
-    }else{
+                                      name    = "bui",
+                                      verbose = verbose)
+    } else {
         building_sums <- FALSE
     }
 
-    if(class(du_benchmark) != "logical"){
+    if (class(du_benchmark) != "logical"){
         du_sums <- computeTotal(Tx_for_pop,
                                 du_benchmark,
-                                name="hhd",
-                                verbose=verbose)
-    }else{
+                                name    = "hhd",
+                                verbose = verbose)
+    } else {
         du_sums <- FALSE
     }
 
-    if(sum(is.na(pop_sums_t)) >= 1 | is.logical(pop_sums_t)){
+    if (sum(is.na(pop_sums_t)) >= 1 | is.logical(pop_sums_t)){
         if(class(pop_benchmark) != "logical"){
             pop_sums <- computeTotal(Tx_for_pop,
                                      pop_benchmark,
-                                     name="ind",
-                                     verbose=verbose)
-        }else if(is.logical(du_benchmark) & is.logical(building_benchmark)){
-            if(verbose) cat("\n\t\t\t|--> got breaks --> ")
+                                     name    = "ind",
+                                     verbose = verbose)
+        } else if (is.logical(du_benchmark) & is.logical(building_benchmark)){
+            if (verbose) cat("\n\t\t\t|--> got breaks --> ")
             breaks <- c(breaks, dim(Tx)[2])
             pop_sums <- vector(length=dim(Tx)[1])
             i = 1; j = 0
-            for(b in breaks){
+            for (b in breaks){
                 print(j)
                 pop_sums <- pop_sums + rowSums(Tx[names(Tx)[i:b]], na.rm=TRUE)
                 i = b+1; j = j+1}
                 pop_sums = pop_sums / j
-            if(verbose) cat(" ok ")
-        }else{
+            if (verbose) cat(" ok ")
+        } else {
             cat("\nWARNING! no total population defined\n")
             pop_sums <- FALSE
         }
-        if(sum(is.na(pop_sums_t))){
-            if(verbose) cat("\n\t\t\t|--> fill missing --> ")
+        if (sum(is.na(pop_sums_t))) {
+            if (verbose) cat("\n\t\t\t|--> fill missing --> ")
             pop_sums_t[is.na(pop_sums_t)] <- pop_sums[is.nan(pop_sums_t)]
             pop_sums <- pop_sums_t
-            if(verbose) cat("ok ")
+            if (verbose) cat("ok ")
         }
     } else {
         pop_sums <- pop_sums_t
@@ -443,14 +458,15 @@ getPopulation <- function(Tx, breaks,
 
     total_pop <- matrix(0, nrow=dim(area_id_dat)[1], ncol=2)
     total_pop <- data.frame(
-        code <- area_id_dat,
-        pop <- pop_sums,
-        du <- du_sums,
+        code     <- area_id_dat,
+        pop      <- pop_sums,
+        du       <- du_sums,
         building <- building_sums
         )
     names(total_pop) <- c("area_id", "pop", "du", "building")
     if(verbose) cat("ok ")
-    return(total_pop)}
+    return(total_pop)
+}
 
 
 computeTotal <- function(Tx, benchmark, verbose=FALSE, name="None"){
@@ -461,19 +477,17 @@ computeTotal <- function(Tx, benchmark, verbose=FALSE, name="None"){
             names(Tx)[benchmark[2]], ">\t"
                     )}
     benchmark <- as.numeric(benchmark)
-    sums <- rowSums(
-        Tx[names(Tx)[benchmark[1]:benchmark[2]]], na.rm=T)
+    sums <- rowSums(Tx[names(Tx)[benchmark[1]:benchmark[2]]], na.rm=T)
     if (verbose) cat(sum(sums, na.rm=T), " ok ")
     return(sums)
 }
 
 
 filterData <- function(
-               census, census_categories,
-               census_area_id,
-               survey, survey_categories,
-               survey_weights, survey_id,
-               na.rm, verbose=verbose){
+               census, census_categories, census_area_id,
+               survey, survey_categories, survey_id,
+               survey_weights, na.rm,
+               verbose=verbose){
     if(verbose) cat("\n\t|--> filter data -->")
     # Tx categories
     if(class(census_categories) %in% c("numeric", "integer")){

@@ -20,6 +20,6 @@ Tx_out, data with estimated values
 fill the missing in a data set based on the distribution of the variable
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 

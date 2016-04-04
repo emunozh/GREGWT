@@ -95,6 +95,6 @@ summary(weights_GREGWT_02)
 
 }
 \author{
-M. Estebna Munoz H.
+M. Esteban Munoz H.
 }
 
