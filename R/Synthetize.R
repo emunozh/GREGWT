@@ -73,7 +73,7 @@ Synthetize.default <- function(
     set.seed(random_seed)
 
     if (output_log){
-        log_con <- file("Snthetic.log")
+        log_con <- file("Snthetic.log", open="a")
         sink(log_con, append=TRUE)
         sink(log_con, append=TRUE, type="message")
     }
@@ -194,7 +194,7 @@ Synthetize.default <- function(
     cat("\t\t\t\t\t\tmethod:", format(method_input, width=10),
         "\t| itr: ", format(itr, digits=0, width=4) ,
         "| Synth. pop --> | TAE:",
-        format((TAE), digits=2, scientific=T))
+        format((TAE), digits=2, scientific=T), " |\n")
     if (output_log){
         sink()
         sink(type="message")

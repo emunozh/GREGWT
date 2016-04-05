@@ -101,7 +101,7 @@ GREGWT.default <- function(data_in           = FALSE,
                            verbose           = FALSE){
 
     if (output_log){
-        log_con <- file("GREGWT.log")
+        log_con <- file("GREGWT.log", open="a")
         sink(log_con, append=TRUE)
         sink(log_con, append=TRUE, type="message")
     }
@@ -639,6 +639,7 @@ computeError <- function(model, group, verbose=FALSE){
     }
     hTx <- t(colSums(model$X_complete * w)[model$constrains_complete])
     hTx <- hTx[,sort(colnames(hTx))]
+
     if (verbose){
         #hTx <- colSums(X * as.numeric(wx_output), na.rm=T)  # Sample totals
         cat("\n###############################################\n")
@@ -647,7 +648,6 @@ computeError <- function(model, group, verbose=FALSE){
         print(Tx_diff)
         cat("\n###############################################\n")
     }
-
     # Compute the internal error of the computation
     # Total absolute error (TAE)
     model$TAE <- getTAE(Tx, hTx)
@@ -658,14 +658,6 @@ computeError <- function(model, group, verbose=FALSE){
     if(verbose) cat("\n using total population: ", model$pop)
     model$PSAE <- model$SAE * 100
     cat(" | PSAE:", format(sum(model$PSAE),digits=2,scientific=T,width=7))
-    ## Correlation Coefficient (Pearson Correlation)
-    model$pearson <- cor(cbind(Tx, hTx), use="complete.obs", method="pearson")
-    ## Independent samples t-Test
-    model$ttest <- t.test(Tx, hTx)
-    ## Coefficient of determination
-    lm.X <- lm(Tx~hTx)
-    model$r2 <- summary(lm.X)$r.squared
-    model$r2.adj <- summary(lm.X)$adj.r.squared
 
     # Total absolute distance (TAD)
     model$TAD <- sum(abs(w-d))
@@ -684,6 +676,18 @@ computeError <- function(model, group, verbose=FALSE){
     model$EM <- (sum(d) - sum(w)) / sum(d)
     # Error in Distribution (ED)
     model$ED <- abs(sum(d) - sum(w)) / sum(d)
+
+    if (sum(is.na(hTx)) >= length(hTx)-3) {
+        return(model)
+    }
+    ## Correlation Coefficient (Pearson Correlation)
+    model$pearson <- cor(cbind(Tx, hTx), use="complete.obs", method="pearson")
+    ## Independent samples t-Test
+    model$ttest <- t.test(Tx, hTx)
+    ## Coefficient of determination
+    lm.X <- lm(Tx~hTx)
+    model$r2 <- summary(lm.X)$r.squared
+    model$r2.adj <- summary(lm.X)$adj.r.squared
 
     cat(" |\n")
     return(model)

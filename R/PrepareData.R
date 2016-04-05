@@ -437,7 +437,6 @@ getPopulation <- function(Tx, breaks,
             pop_sums <- vector(length=dim(Tx)[1])
             i = 1; j = 0
             for (b in breaks){
-                print(j)
                 pop_sums <- pop_sums + rowSums(Tx[names(Tx)[i:b]], na.rm=TRUE)
                 i = b+1; j = j+1}
                 pop_sums = pop_sums / j
