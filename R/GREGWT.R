@@ -244,7 +244,6 @@ GREGWT.default <- function(data_in           = FALSE,
     if(verbose) cat("\narrange data and data formats")
     constrains_complete <- names(Tx_complete)
     constrains_names    <- names(Tx)
-    constrains_names    <- gsub("G.", "", constrains_names)
     Tx                  <- as.matrix(Tx)
     Tx_complete         <- as.matrix(Tx_complete)
     bounds              <- as.numeric(bounds)

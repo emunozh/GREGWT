@@ -82,6 +82,7 @@ Synthetize.default <- function(
     if (is.logical(data_in)){
         if (is.logical(X)){
             survey <- X
+            original_survey <- X
         }
         if (is.logical(w)){
             if (is.logical(pop_size_input)){
@@ -95,7 +96,9 @@ Synthetize.default <- function(
             }
         }
     } else {
-        survey <- data_in$X_complete
+        #survey <- data_in$X_complete
+        survey <- data_in$X
+        original_survey <- data_in$survey
         nW <- dim(survey)[1]
         if (distribution == "uniform"){
             w <- runif(nW)
@@ -112,7 +115,7 @@ Synthetize.default <- function(
     }
 
     # prepare array for synthetic population
-    if (!(is.logical(output))){survey <- cbind(survey, output)}
+    if (!(is.logical(output))){ survey <- cbind(survey, output) }
     survey <- as.data.frame(survey)
 
     if (!(is.logical(pop_size_input))){
@@ -126,8 +129,10 @@ Synthetize.default <- function(
     }
 
     if (is.null(benchmarks) & !(is.logical(data_in))){
-        benchmarks <- data_in$Tx_complete
-        names(benchmarks) <- data_in$constrains_complete
+        #benchmarks <- data_in$Tx_complete
+        benchmarks <- data_in$Tx
+        #names(benchmarks) <- data_in$constrains_complete
+        names(benchmarks) <- data_in$constrains
     }
 
     # test method
@@ -147,6 +152,7 @@ Synthetize.default <- function(
     # assign gloval variables
     assign("verbose",         verbose,         envir = .GlobalEnv)
     assign("survey",          survey,          envir = .GlobalEnv)
+    assign("original_survey", original_survey, envir = .GlobalEnv)
     assign("w",               w,               envir = .GlobalEnv)
     assign("n_samples",       n_samples,       envir = .GlobalEnv)
     assign("pop_size_input",  pop_size_input,  envir = .GlobalEnv)
@@ -172,11 +178,14 @@ Synthetize.default <- function(
 
     result = FALSE
     switch(method_input,
-        "random"  = {result = randomSample() },
-        "fbs"     = {result = fbs()          },
-        "best"    = {result = findBest()     },
-        "bestpop" = {result = findBest()     }
+        "random"  = {model = randomSample() },
+        "fbs"     = {model = fbs()          },
+        "best"    = {model = findBest()     },
+        "bestpop" = {model = findBest()     }
         )
+
+    result <- model$result
+    sampled_survey <- model$sampled_survey
 
     if (is.logical(result)) stop("Method: <",
                                  method_input,
@@ -199,17 +208,28 @@ Synthetize.default <- function(
         sink()
         sink(type="message")
     }
-    return(result)
+    return(list("result"=result, "sampled_survey"=sampled_survey))
+}
+
+
+getF <- function(x, R, substract=FALSE){
+    if (substract){
+        f = sum(R^2 - (R - x)^2)
+    } else {
+        f = sum(R^2 - (R + x)^2)
+    }
+    return(f)
 }
 
 
 fbs <- function(){
     if (verbose) cat("Using fbs method...\t")
-    result <- randomSample()
+    result <- survey
+    sampled_survey <- original_survey
     # (1) make integer weights
     X <- getX()
     wo <- rep(0, length(w))
-    inx <- sample(length(w), pop_size_input, replace=TRUE, prob=w)
+    inx <- sample(length(w), pop_size_input, replace=FALSE, prob=w)
     wo[inx] <- 1
     Tx <- benchmarks
 
@@ -227,15 +247,9 @@ fbs <- function(){
                          "\tR:", sum(R^2),
                          "\tTAE: ", TAE_sq)
         # (4) compute FI and FII
-        FII <- vector(length=length(dim(X)[1]))
-        for (i in seq(1, dim(X)[1])) {
-            FII[i] <- sum(R^2 - (R + X[i,])^2)
-        }
+        FII <- apply(X, 1, getF, R=R)
         X_sim <- X[inx,]
-        FI  <- vector(length=length(dim(X)[1]))
-        for (i in seq(1, dim(X_sim)[1])) {
-            FI[i]  <- sum(R^2 - (R - X_sim[i,])^2)
-        }
+        FI <- apply(X, 1, getF, R=R, substract=TRUE)
         l_FI  <- length(FI[FI > 0])
         l_FII <- length(FII[FII > 0])
         if (verbose) cat("\n\t|--> length(FI): ", l_FI,
@@ -270,9 +284,11 @@ fbs <- function(){
             break
         }
     } # end while loop
+    result <- result[which(wo == 1), ]
+    sampled_survey <- sampled_survey[which(wo == 1), ]
     assign("itr", j, envir = .GlobalEnv)
     if (verbose) cat("OK\n")
-    return(result)
+    return(list("result"=result, "sampled_survey"=sampled_survey))
 }
 
 
@@ -300,10 +316,11 @@ randomSample <- function(){
         index_survey <- sample(
             nrow(survey), pop_size_input, replace=TRUE, prob=w)
         synthetic_pop <- survey[index_survey, ]
+        original_sur[,,i] <- original_survey[index_survey, ]
         result[,,i] <- as.matrix(synthetic_pop)
     }
     assign("itr", n_samples, envir = .GlobalEnv)
-    return(result)
+    return(list("result"=result, "sampled_survey"=original_sur))
 }
 
 
@@ -416,7 +433,9 @@ fillPop <- function(synthetic.pop, expected.dim){
 
 
 findBest <- function(){
-    result <- randomSample()
+    model <- randomSample()
+    result <- model$result
+    sampled_survey <- model$sampled_survey
     TAE_m <- getTAE_synth(result)
     # get the min TAE index
     TAE_index <- which(TAE_m == min(TAE_m))
@@ -438,7 +457,8 @@ findBest <- function(){
     } else {
         result_index <- TAE_index
     }
-    return(result[,,result_index[1]])
+    return(list("result"=result[,,result_index[1]],
+                "sampled_survey"=sampled_survey[,,result_index[1]]))
 }
 
 
@@ -459,7 +479,11 @@ gethTx <- function(result){
     c_sums <- result[, index, ]
 
     # get the sample marginal totals for the computation of TAE
-    if (dim(result)[1]==1 | dim(result)[3]==1){
+    if (length(dim(result)) == 3){
+        if (dim(result)[3] > 1) single_iter <- FALSE
+        else single_iter <- TRUE
+    } else single_iter <- TRUE
+    if (dim(result)[1]==1 | single_iter==TRUE){
         # If there is a single person in the sample
         # or a single iteration
         TAE_sample <- sum(colSums(c_sums, na.rm=TRUE))
