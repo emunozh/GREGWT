@@ -229,8 +229,8 @@ fbs <- function(){
     # (1) make integer weights
     X <- getX()
     wo <- rep(0, length(w))
-    inx <- sample(length(w), pop_size_input, replace=FALSE, prob=w)
-    wo[inx] <- 1
+    inx <- sample(length(w), pop_size_input, replace=TRUE, prob=w)
+    for (i in inx) wo[i] = wo[i] + 1
     Tx <- benchmarks
 
     l_FI <- Inf; l_FII <- Inf
@@ -248,25 +248,26 @@ fbs <- function(){
                          "\tTAE: ", TAE_sq)
         # (4) compute FI and FII
         FII <- apply(X, 1, getF, R=R)
-        X_sim <- X[inx,]
+        #X_sim <- X[inx,]
         FI <- apply(X, 1, getF, R=R, substract=TRUE)
-        l_FI  <- length(FI[FI > 0])
-        l_FII <- length(FII[FII > 0])
+        l_FI  <- sum(FI > 0)
+        l_FII <- sum(FII > 0)
         if (verbose) cat("\n\t|--> length(FI): ", l_FI,
                          "\tlength(FII): ", l_FII)
         # (5) swap individuals on w
         wo_temp <- wo
         if (l_FI  > 0 & l_FII  > 0){
             if (verbose) cat("\n\t\t|--> swap")
-            wo_temp[which(FI  == max(FI) )] <- 0
-            wo_temp[which(FII == max(FII))] <- 1
+            wo_temp[which(FI  == max(FI) )] <- wo_temp[which(FI  == max(FI) )] - 1
+            wo_temp[which(FII == max(FII))] <- wo_temp[which(FII == max(FII))] + 1
             TAE_temp <- sum(abs(Tx - colSums(X * wo_temp, na.rm=TRUE)))
             R_temp <- Tx - colSums(X * wo_temp, na.rm=TRUE)
             if (verbose) cat("\tR: ", sum(R_temp^2), "\tTAE: ", TAE_temp)
         } else if (l_FI <= 0 & l_FII  > 0){
             if (verbose) cat("\n\t\t|--> random swap")
-            wo_temp[sampleW(FI)] <- 0
-            wo_temp[which(FII == max(FII))] <- 1
+            random_inx <- sampleW(FI)
+            wo_temp[random_inx] <- wo_temp[random_inx] - 1
+            wo_temp[which(FII == max(FII))] <- wo_temp[which(FII == max(FII))] + 1
             TAE_temp <- sum(abs(Tx - colSums(X * wo_temp, na.rm=TRUE)))
             R_temp <- Tx - colSums(X * wo_temp, na.rm=TRUE)
             if (verbose) cat("\tR: ", sum(R_temp^2), "\tTAE: ", TAE_temp)
@@ -278,14 +279,18 @@ fbs <- function(){
             break
         }
         # (6) accept of reject change
-        if (TAE_temp < TAE_sq){
+        if (TAE_temp < TAE_sq | sum(R_temp^2) < sum(R^2)){
             wo <- wo_temp
+            TAE_sq <- TAE_temp
+            R <- R_temp
         } else {
             break
         }
     } # end while loop
-    result <- result[which(wo == 1), ]
-    sampled_survey <- sampled_survey[which(wo == 1), ]
+    result <- cbind(result, wo)
+    sampled_survey <- cbind(sampled_survey, wo)
+    result <- result[which(wo >= 1), ]
+    sampled_survey <- sampled_survey[which(wo >= 1), ]
     assign("itr", j, envir = .GlobalEnv)
     if (verbose) cat("OK\n")
     return(list("result"=result, "sampled_survey"=sampled_survey))
