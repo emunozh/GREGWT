@@ -365,7 +365,11 @@ GREGWT.default <- function(data_in           = FALSE,
         cat("\t|\n")
     }
 
-    final_weights <- cbind(final_weights, model_iter$final_weights)
+    if (is.null(dim(final_weights))) {
+        final_weights <- model_iter$final_weights
+    } else {
+        final_weights <- cbind(final_weights, model_iter$final_weights)
+    }
     } # end loop areas
 
     model                     <- model_iter #TODO: is error implemented

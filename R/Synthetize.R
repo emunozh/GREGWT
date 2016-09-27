@@ -31,6 +31,8 @@
 #' will output an array of size [pop,x], this array is the 'best' fit to
 #' benchmarks; (3) c('bestpop', n) similar to best bust gives more attention
 #' to population totals, important if running an integrated reweight.
+#' @param errormetric (default = "TAE") metric used for the computation of the
+#' error term. (a) 'TAE' total absolut error (default), (b) 'Z' modified Z-Statistic
 #' @param distribution (default = FALSE) FALSE = use weight as probability;
 #' ones = use a vector of ones as selection probability;
 #' uniform = use a random uniform distribution as selection probability.
@@ -58,6 +60,7 @@ Synthetize.default <- function(
         pop_size_input  = FALSE,
         benchmarks      = NULL,
         method          = c("random", 1),
+        errormetric     = "TAE",
         distribution    = FALSE,
         group           = FALSE,
         HHsize_mean_fit = 1.8,
@@ -158,6 +161,7 @@ Synthetize.default <- function(
     assign("pop_size_input",  pop_size_input,  envir = .GlobalEnv)
     assign("benchmarks",      benchmarks,      envir = .GlobalEnv)
     assign("method",          method_input,    envir = .GlobalEnv)
+    assign("errormetric",     errormetric,     envir = .GlobalEnv)
     assign("group",           group,           envir = .GlobalEnv)
     assign("HHsize_mean_fit", HHsize_mean_fit, envir = .GlobalEnv)
     assign("max_iter",        max_iter,        envir = .GlobalEnv)
@@ -172,6 +176,7 @@ Synthetize.default <- function(
         cat("\nweights l        = ", length(w)        )
         cat("\ntotal pop        = ", pop_size_input   )
         cat("\nmethod           = ", method           )
+        cat("\nerror metric     = ", errormetric      )
         cat("\nHHsize_mean_fit  = ", HHsize_mean_fit  )
         cat("\n====================================\n")
     }
@@ -199,7 +204,10 @@ Synthetize.default <- function(
         if (verbose) cat("\n dim(mode)", dim(result), "\n")
         result[, weight_index, ] <- 1
     }
-    TAE_m <- getTAE_synth(result)
+    switch(errormetric,
+           "TAE" = {TAE_m <- getTAE_synth(result)},
+           "Z"   = {TAE_m <- getZ_synth(result)}
+           )
     cat("\t\t\t\t\t\tmethod:", format(method_input, width=10),
         "\t| itr: ", format(itr, digits=0, width=4) ,
         "| Synth. pop --> | TAE:",
@@ -316,13 +324,14 @@ getFittValues <- function(Tx, X, w){
 randomSample <- function(){
     if (verbose) cat("\nMake random sample...")
     result <- prepareResult()
+    original_sur <- array(NaN, dim=c(pop_size_input, ncol(original_survey), n_samples))
     for (i in seq(1, n_samples)) {
         if (verbose) cat("\n\t|--> sample ", i, "/", n_samples)
-        index_survey <- sample(
-            nrow(survey), pop_size_input, replace=TRUE, prob=w)
+        index_survey <- sample(nrow(survey), pop_size_input, replace=TRUE, prob=w)
+        original_sur[,,i] <- as.matrix(original_survey[index_survey, ])
         synthetic_pop <- survey[index_survey, ]
-        original_sur[,,i] <- original_survey[index_survey, ]
         result[,,i] <- as.matrix(synthetic_pop)
+        if (verbose) cat("\tOK")
     }
     assign("itr", n_samples, envir = .GlobalEnv)
     return(list("result"=result, "sampled_survey"=original_sur))
@@ -441,7 +450,10 @@ findBest <- function(){
     model <- randomSample()
     result <- model$result
     sampled_survey <- model$sampled_survey
-    TAE_m <- getTAE_synth(result)
+    switch(errormetric,
+           "TAE" = {TAE_m <- getTAE_synth(result)},
+           "Z"   = {TAE_m <- getZ_synth(result)}
+           )
     # get the min TAE index
     TAE_index <- which(TAE_m == min(TAE_m))
 
@@ -476,12 +488,17 @@ getX <- function(){
 }
 
 
-gethTx <- function(result){
+getTx <- function(result){
     # select only columns to benchmarks to
+    if (verbose) cat(" getTh")
     bench_names <- names(benchmarks)
     result_name <- dimnames(result)[[2]]
     index <- sapply(result_name, "%in%", bench_names)
-    c_sums <- result[, index, ]
+    if (length(dim(result)) == 3){
+        c_sums <- result[, index, ]
+    } else {
+        c_sums <- result[, index]
+    }
 
     # get the sample marginal totals for the computation of TAE
     if (length(dim(result)) == 3){
@@ -500,7 +517,7 @@ gethTx <- function(result){
 
 
 getTAE_synth <- function(result){
-    TAE_sample <- gethTx(result)
+    TAE_sample <- getTx(result)
     # get the marginal totals from the benchmarks for the computation of the
     # TAE
     TAE_benchm <- sum(benchmarks)
@@ -509,4 +526,20 @@ getTAE_synth <- function(result){
 
     assign("TAE", min(TAE_m), envir = .GlobalEnv)
     return(TAE_m)
+}
+
+
+getZ_synth <- function(result){
+    Tx <- getTx(result)
+    hTx <- sum(benchmarks)
+    z <- Z(Tx, hTx)
+    return(z)
+}
+
+
+Z <- function(Tx, hTx){
+    r <- hTx/sum(hTx)
+    p <- Tx/sum(Tx)
+    Z <- (r-p)/sqrt(p*(1-p)/sum(Tx))
+    return(Z)
 }
