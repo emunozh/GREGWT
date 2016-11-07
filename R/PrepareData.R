@@ -146,10 +146,10 @@ prepareData <- function(census, survey,            # require input data
         X_old_temp <- X
         X_complete <- toBinary(X, reference_col=T, use_base=use_base,
                                verbose=verbose)
-        if(verbose) cat("X(complete) ")
+        if(verbose) cat(" X(complete) ")
         X <- toBinary(X, reference_col=reference_col, use_base=use_base,
                       verbose=verbose)
-        if(verbose) cat("X ")
+        if(verbose) cat(" X ")
         keep_cols <- rownames(X_old_temp) %in% rownames(X)
         dx <- dx[keep_cols]
         survey_id <- survey_id[keep_cols, ]
@@ -381,7 +381,6 @@ getPopulation <- function(Tx, breaks,
                           pop_total_col      = FALSE,
                           verbose            = FALSE
                           ){
-
     Tx_for_pop <- Tx
     if (verbose) cat("\n\t\t|--> get population totals --> ")
     if (!(is.logical(area_id_pos))) {
@@ -394,10 +393,8 @@ getPopulation <- function(Tx, breaks,
     (a) the position of the area id area_id_pos=int; or
     (b) a vector with the area id area_id=vector()")
     } else if (!(is.logical(area_id))){
-        if (verbose) cat("\n\t\t\t|--> got area id name --> ", area_id)
-        area_id_dat <- Tx[which(names(Tx) == area_id)]
-        Tx          <- Tx[which(names(Tx) != area_id)]
-        if (verbose) cat("ok ")
+        area_id_dat <- area_id
+        if (verbose) cat(" ok ")
     }
 
     pop_sums_t <- FALSE
