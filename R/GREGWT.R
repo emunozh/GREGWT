@@ -140,7 +140,7 @@ GREGWT.default <- function(data_in           = FALSE,
         stop("Either data_in or X_input and dx_input have to be define")
     }
 
-    survey_id <- X_temp[colnames(X_temp) %in% "survey_id"]
+    survey_id <- X_temp[,colnames(X_temp) %in% "survey_id"]
     X <- X_temp[,!(colnames(X_temp) %in% "survey_id")]
     X <- as.matrix(X)
     if (verbose) cat(" ... ok")
@@ -368,7 +368,14 @@ GREGWT.default <- function(data_in           = FALSE,
     if (is.null(dim(final_weights))) {
         final_weights <- model_iter$final_weights
     } else {
-        final_weights <- cbind(final_weights, model_iter$final_weights)
+        old_colname <- colnames(final_weights)
+        idx <- which(colnames(model_iter$final_weights) == 'id')
+        cidx <- which(colnames(model_iter$final_weights) != 'id')
+        extra_colname <- colnames(model_iter$final_weights)[cidx]
+        new_colnames <- c(old_colname, extra_colname)
+        fw <- model_iter$final_weights[,-idx]
+        final_weights <- cbind(final_weights, fw)
+        colnames(final_weights) <- new_colnames
     }
     } # end loop areas
 
@@ -539,8 +546,8 @@ GREGWTest <- function(X, dx, Tx, X_complete, Tx_complete, pop,
         }
     }
     if (verbose) cat("\nbind index")
-    wx_output <- cbind(survey_id, wx_output)
-    colnames(wx_output) <- c("id", "w")
+    wx_output <- cbind(survey_id, wx_output) #TODO: why do I need the durvey id?
+    colnames(wx_output) <- c("id", format(area_code, scientific=FALSE))
     return(list(input_weights=dx_output, final_weights=wx_output))
 }
 
