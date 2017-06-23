@@ -149,9 +149,17 @@ GREGWT.default <- function(data_in           = FALSE,
     if (verbose) cat("\nget area benchmarks")
     if (is.logical(Tx) & !(is.logical(data_in))){
         if(verbose) cat("\n\tget Tx ")
-        if (length(area_code) == 1){
-            if(verbose) cat("(for single area):")
-            area_index = which(data_in$area_id==area_code)
+        if (is.logical(area_code)){
+            if(verbose) cat("(for", dim(data_in$Tx)[1], "areas):")
+            area_index = seq(dim(data_in$Tx)[1])
+        } else if (length(area_code) == 1){
+            if(verbose) cat("(for single area): ")
+            if(is.numeric(area_code)){
+                area_index = area_code
+            } else {
+                area_index = which(data_in$area_id==area_code)
+            }
+            if(verbose) cat('index ', area_index)
         } else {
             if(verbose) cat("(for", length(area_code), "areas):")
             area_index = data_in$area_id[,1] %in% area_code
@@ -202,21 +210,34 @@ GREGWT.default <- function(data_in           = FALSE,
             align_pop <- FALSE
             if(verbose) cat("\nunknown total population: ", pop)
         } else {
-            if (length(area_code) == 1){
-                pop <- total_pop[which(total_pop$area_id==area_code), ]
+            if (is.logical(area_code)){
+                pop <- total_pop$pop
+            } else if (length(area_code) == 1){
+                if(is.numeric(area_code)){
+                    pop <- total_pop[area_code, ]
+                } else {
+                    pop <- total_pop[which(total_pop$area_id==area_code), ]
+                }
                 pop <- pop$pop
             } else {
                 pop <- total_pop[total_pop$area_id %in% area_code, ]
                 pop <- pop$pop
             }
             if (verbose) cat("\nusing total population by area_id: ",
-                            area_code, pop)
+                            area_code)
         }
     } else {
         pop <- area_pop
         if (verbose) cat("\nusing variable <area_pop>: ", pop)
     }
-    if (verbose) cat("\npopulation: ", pop)
+    if (verbose) cat("\npopulation: ")
+    if (verbose) {
+        if(length(pop) == 1){
+            cat(pop)
+        } else {
+            cat('vector')
+        }
+    }
     if (verbose) cat(" ... ok")
 
     if (!(is.logical(pop))){
