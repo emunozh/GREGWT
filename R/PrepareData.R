@@ -154,6 +154,8 @@ prepareData <- function(census, survey,            # require input data
         dx <- dx[keep_cols]
         survey_id <- survey_id[keep_cols, ]
         if(verbose) cat(" ok")
+    } else {
+        X_complete <- X
     }
 
     ### Add a suffix to data names
