@@ -84,7 +84,7 @@
 #' points(total_pop2$pop, col="red", pch="+")
 #'
 #' @author M. Esteban Munoz H.
-prepareData <- function(census, survey,            # require input data
+prepareData <- function(census, survey,            # required input data
     census_area_id     = 1,     # census area id
     survey_id          = 1,     # survey id
     convert            = TRUE,  # convert data to binary
@@ -551,7 +551,7 @@ filterData <- function(
         X <- X[remove, ]
         dx <- dx[remove]
         survey_id <- survey_id[remove]}
-    if(verbose) cat("dim(Tx):", dim(Tx))
+    if(verbose) cat(" dim(Tx):", dim(Tx))
     if(verbose) cat(" length(dx):", length(dx))
     if(verbose) cat(" dim(X):", dim(X))
     if(verbose) cat(" ok")
@@ -765,7 +765,9 @@ fillNA <- function(subTx_na, freq_rel){
 #' all variables has to be equal to the population total.
 #'
 #' @param Tx, un-aligned census data
+#' @param breaks, categories on census to align, defined by breaks
 #' @param pop_totals, population totals vector
+#' @param pos, start position fro breaks
 #' @param verbose (optional, default=FALSE) be verbose
 #' @return Tx_align, align census data
 #' @author M. Esteban Munoz H.

@@ -853,6 +853,8 @@ plot.GREGWT <- function(x, ...){
     r <- hTx/sum(Tx, na.rm=T)
     p <- Tx/sum(Tx, na.rm=T)
     Z <- (r-p)/sqrt(p*(1-p)/sum(Tx, na.rm=T))
+    Z[Z == Inf] <- NaN
+    Z[Z == -Inf] <- NaN
     barplot(Z,
             names.arg=names_y,
             main="Z-Statistic of model constrains",
