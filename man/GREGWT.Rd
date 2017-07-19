@@ -10,10 +10,12 @@ GREGWT(x, ...)
 \item{data_in}{(default=FALSE) input data}
 
 \item{area_code}{(default = 1) area code to use for the reweighting, defines
-the area code name. If area_code is a list the GREGWT function will loop
+the area code name. If area_code is a list, the GREGWT function will loop
 through that list and reweight every area on the list. If area_code is of
-class logical the GREGWT function will loop through all simulation area in
-the data set.}
+class logical the GREGWT function will loop through all simulation area on
+the data set. If area_code is set to `internal` the GREGWT function will
+loop through all areas on the data set but will used the area codes define
+by function `prepareData`.}
 
 \item{use_ginv}{(default = FALSE) use the ginv function of the MASS library
 to compute the inverse matrix.}
@@ -97,4 +99,3 @@ summary(weights_GREGWT_02)
 \author{
 M. Esteban Munoz H.
 }
-

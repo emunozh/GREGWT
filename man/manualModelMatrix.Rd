@@ -26,4 +26,3 @@ function to manually create a design matrix
 \author{
 M. Esteban Munoz H.
 }
-

@@ -22,4 +22,3 @@ fill the missing in a data set based on the distribution of the variable
 \author{
 M. Esteban Munoz H.
 }
-

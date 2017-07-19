@@ -45,4 +45,3 @@ total_pop <- getPopulation(GREGWT.census, c(11,17), area_id_pos=1)
 \author{
 M. Esteban Munoz H.
 }
-

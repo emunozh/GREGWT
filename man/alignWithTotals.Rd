@@ -10,7 +10,11 @@ alignWithTotals(Tx, breaks, pop_totals, pos, name = "standard",
 \arguments{
 \item{Tx, }{un-aligned census data}
 
+\item{breaks, }{categories on census to align, defined by breaks}
+
 \item{pop_totals, }{population totals vector}
+
+\item{pos, }{start position fro breaks}
 
 \item{verbose}{(optional, default=FALSE) be verbose}
 }
@@ -24,4 +28,3 @@ all variables has to be equal to the population total.
 \author{
 M. Esteban Munoz H.
 }
-

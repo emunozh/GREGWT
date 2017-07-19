@@ -20,4 +20,3 @@ wo align weights
 \author{
 M. Esteban Munoz H.
 }
-

@@ -33,4 +33,3 @@ sumFactors(fact, multiplier)
 \author{
 M. Esteban Munoz H.
 }
-

@@ -39,4 +39,3 @@ This function also calculates the population size of each area.
 \author{
 M. Esteban Munoz H.
 }
-

@@ -24,4 +24,3 @@ dummy.survey <- makeDummy(GREGWT.survey)
 \author{
 M. Esteban Munoz H.
 }
-

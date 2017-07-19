@@ -118,4 +118,3 @@ points(total_pop2$pop, col="red", pch="+")
 \author{
 M. Esteban Munoz H.
 }
-

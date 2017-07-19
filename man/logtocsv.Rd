@@ -18,4 +18,3 @@ path called GREGWT_log.csv.
 \author{
 M. Esteban Munoz H.
 }
-

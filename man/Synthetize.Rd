@@ -31,6 +31,9 @@ will output an array of size [pop,x], this array is the 'best' fit to
 benchmarks; (3) c('bestpop', n) similar to best bust gives more attention
 to population totals, important if running an integrated reweight.}
 
+\item{errormetric}{(default = "TAE") metric used for the computation of the
+error term. (a) 'TAE' total absolut error (default), (b) 'Z' modified Z-Statistic}
+
 \item{distribution}{(default = FALSE) FALSE = use weight as probability;
 ones = use a vector of ones as selection probability;
 uniform = use a random uniform distribution as selection probability.}
@@ -63,4 +66,3 @@ Create a synthetic population based on survey weights.
 \author{
 M. Esteban Munoz H.
 }
-

@@ -17,10 +17,12 @@
 #'
 #' @param data_in (default=FALSE) input data
 #' @param area_code (default = 1) area code to use for the reweighting, defines
-#' the area code name. If area_code is a list the GREGWT function will loop
+#' the area code name. If area_code is a list, the GREGWT function will loop
 #' through that list and reweight every area on the list. If area_code is of
-#' class logical the GREGWT function will loop through all simulation area in
-#' the data set.
+#' class logical the GREGWT function will loop through all simulation area on
+#' the data set. If area_code is set to `internal` the GREGWT function will
+#' loop through all areas on the data set but will used the area codes define
+#' by function `prepareData`.
 #' @param use_ginv (default = FALSE) use the ginv function of the MASS library
 #' to compute the inverse matrix.
 #' @param Tx (default = FALSE) manually specify benchmark vector
@@ -152,6 +154,10 @@ GREGWT.default <- function(data_in           = FALSE,
         if (is.logical(area_code)){
             if(verbose) cat("(for", dim(data_in$Tx)[1], "areas):")
             area_index = seq(dim(data_in$Tx)[1])
+        } else if (area_code == 'internal'){
+            area_index = seq(dim(data_in$Tx)[1])
+            area_code = data_in$area_id[,1]
+            if(verbose) cat("(for", length(area_index), "areas):")
         } else if (length(area_code) == 1){
             if(verbose) cat("(for single area): ")
             if(is.numeric(area_code)){
@@ -162,7 +168,7 @@ GREGWT.default <- function(data_in           = FALSE,
             if(verbose) cat('index ', area_index)
         } else {
             if(verbose) cat("(for", length(area_code), "areas):")
-            area_index = data_in$area_id[,1] %in% area_code
+            area_index = which(data_in$area_id[,1] %in% area_code)
         }
         Tx <- data_in$Tx[area_index, ]
         Tx_complete <- data_in$Tx_complete[area_index,]

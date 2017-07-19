@@ -31,4 +31,3 @@ the inputed survey data.
 \author{
 M. Esteban Munoz H.
 }
-
