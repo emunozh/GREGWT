@@ -726,36 +726,54 @@ computeError <- function(model, group, verbose=FALSE){
 
 
 print.GREGWT <- function(x, ...){
-    cat("\nMean Weight Distance [mean(abs(w - d))]:\n")
-    print(mean(x$DW))
-    cat("\nMean Chi-squared Distance [mean(1/2 * (w * d)^2 / d)]:\n")
-    print(mean(x$DChi2))
-    cat("\nTotal Chi-squared Distance [sum(1/2 * (w * d)^2 / d)]:\n")
-    print(x$TDChi2)
-    cat("\nTotal absolute distance [sum(abs(w - d))]:\n")
-    print(x$TAD)
-    cat("\nTotal absolute error [abs(Tx - hTx)]:\n")
-    print(x$TAE)
+    require('stargazer')
+    cat("\n===========================================================================================")
+    cat("\nError measure\t\t\t\t\t\t\t| Value")
+    cat("\n-------------------------------------------------------------------------------------------")
+    cat("\nMean Weight Distance [mean(abs(w - d))]:\t\t\t| ")
+    cat(mean(x$DW))
+    cat("\nMean Chi-squared Distance [mean(1/2 * (w * d)^2 / d)]:\t\t| ")
+    cat(mean(x$DChi2))
+    cat("\nTotal Chi-squared Distance [sum(1/2 * (w * d)^2 / d)]:\t\t| ")
+    cat(x$TDChi2)
+    cat("\nTotal absolute distance [sum(abs(w - d))]:\t\t\t| ")
+    cat(x$TAD)
+    cat("\nTotal absolute error [abs(Tx - hTx)]:\t\t\t\t| ")
+    cat(x$TAE)
+    cat("\nMean Standardized absolute error [TAE / n]:\t\t\t| ")
+    cat(mean(x$SAE))
+    cat("\nMean Percentage absolute error [SAE * 100]:\t\t\t| ")
+    cat(mean(x$PSAE))
+    #cat("\nStandardized absolute error [TAE / n]:\n")
+    #stargazer(x$SAE, type='text')
+    #cat("\nPercentage absolute error [SAE * 100]:\n")
+    #stargazer(x$PSAE, type='text')
+    cat("\nCorrelation Coefficient (Pearson Correlation):\t\t\t| ")
+    cat(x$pearson[1,1])
+    #cat("\nIndependent samples t-Test [t.test(Tx, hTx)]:\t")
+    #print(x$ttest)
+    cat("\nR squared (Tx~hTx):\t\t\t\t\t\t| ")
+    cat(x$r2)
+    cat("\nAdjusted R squared:\t\t\t\t\t\t| ")
+    cat(x$r2.adj)
+    cat("\nMean Modified z-statistic [Z = (r-p)/sqrt(p*(1-p)/sum(Tx))]:\t| ")
+    cat(mean(x$Z, na.rm=T))
+    cat("\nError in margin (EM) [(sum(d)-sum(w))/sum(d)]:\t\t\t| ")
+    cat(x$EM)
+    cat("\nError in distribution (ED) [abs(sum(d)-sum(w))/sum(d)]:\t\t| ")
+    cat(x$ED)
+    cat("\nNew Weights. Access via: X$final_weights:\t\t\t| ")
+    cat(paste(length(x$final_weights),"New weights"))
+    cat("\n-------------------------------------------------------------------------------------------\n")
     cat("\nStandardized absolute error [TAE / n]:\n")
-    print(x$SAE)
+    stargazer(as.data.frame(x$SAE), type='text', summary=F)
     cat("\nPercentage absolute error [SAE * 100]:\n")
-    print(x$PSAE)
-    cat("\nCorrelation Coefficient (Pearson Correlation):\n")
-    print(x$pearson)
-    cat("\nIndependent samples t-Test [t.test(Tx, hTx)]:\n")
-    print(x$ttest)
-    cat("\nR squared (Tx~hTx):\n")
-    print(x$r2)
-    cat("\nAdjusted R squared:\n")
-    print(x$r2.adj)
+    stargazer(as.data.frame(x$PSAE), type='text', summary=F)
     cat("\nModified z-statistic [Z = (r-p)/sqrt(p*(1-p)/sum(Tx))]:\n")
-    print(x$Z)
-    cat("\nError in margin (EM) [(sum(d)-sum(w))/sum(d)]:\n")
-    print(x$EM)
-    cat("\nError in distribution (ED) [abs(sum(d)-sum(w))/sum(d)]:\n")
-    print(x$ED)
-    cat("\nNew Weights. Access via: X$final_weights:\n")
-    print(paste(length(x$final_weights),"New weights"))
+    stargazer(as.data.frame(x$Z), type='text', summary=F)
+
+
+    return(x)
 }
 
 
@@ -838,28 +856,28 @@ print.summary.GREGWT <- function(x, ...){
 
 plot.GREGWT <- function(x, ...){
     layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page
-    names_y <- x$constrains_complete
+
+    # PSAE
+    names_y <- names(x$PSAE)
     names_y <- gsub("G.", "", names_y)
-    hTx     <- colSums(x$final_weights * x$X_complete, na.rm=T)
-    Tx      <- x$Tx_complete
-    #PSAE    <- as.numeric(abs(Tx-hTx)/length(x$final_weights)*100)
-    #PSAE    <- x$PSAE
-    PSAE    <- abs(Tx-hTx) / x$pop * 100
-    barplot(PSAE,
+    barplot(x$PSAE,
             names.arg=names_y,
             main="Percentage Error of model constrains",
             ylab="PSAE = (Tx - hTx)/n*100", xlab="")
+    abline(h=mean(x$PSAE), col="red")
+
     # Z-statistic
-    r <- hTx/sum(Tx, na.rm=T)
-    p <- Tx/sum(Tx, na.rm=T)
-    Z <- (r-p)/sqrt(p*(1-p)/sum(Tx, na.rm=T))
-    Z[Z == Inf] <- NaN
-    Z[Z == -Inf] <- NaN
-    barplot(Z,
+    x$Z[x$Z == Inf] <- NA
+    x$Z[x$Z == -Inf] <- NA
+    barplot(x$Z,
             names.arg=names_y,
             main="Z-Statistic of model constrains",
             ylab="Z = (r-p)/sqrt(p*(1-p)/sum(Tx))", xlab="")
+    print(mean(Z, na.rm=T))
+    print(Z)
+    abline(h=mean(Z, na.rm=T), col="red")
 
+    # Final vs. Initial weights
     if (dim(x$final_weights)[2] == 1){
         area_numbers <- 1
         plot(as.numeric(x$final_weights), x$input_weights,
@@ -879,8 +897,9 @@ plot.GREGWT <- function(x, ...){
                 x$input_weights, col=i, pch=".")
         }
     }
-    abline(0,1,col="red")
+    abline(h=0, col="red")
 
+    # Weight distance
     plot(sort(as.numeric(
          x$final_weights) - x$input_weights),
          ylab="Weight distance [w - d]",
