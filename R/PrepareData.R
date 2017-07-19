@@ -697,21 +697,34 @@ namesDiff <- function(d_1, d_2){
     return(paste(namesd, collapse="\t"))}
 
 
-#' @title plotPrepareData
+#' @title plot.PrepareData
 #'
 #' @description
 #' Visualize the correlation between categories of all constrains.
 #'
 #' @param prepareData object
 #' @return NULL
+#' @examples
+#' data("GREGWT.census")
+#' data("GREGWT.survey")
+#'
+#' simulation_data <- prepareData(
+#'   GREGWT.census, GREGWT.survey,
+#'   survey_id=FALSE,
+#'   pop_benchmark=c(2,12),
+#'   census_categories=seq(2,24),
+#'   survey_categories=seq(1,3)
+#' )
+#'
+#' plot(simulation_data)
 #' @author M. Esteban Munoz H.
-plotPrepareData <- function(data.in,...){
+plot.prepareData <- function(data_in,...){
     # Visualize correlation using a correlogram
     require(corrgram)
-    X <- data.in$X
-    print(dim(X))
+    X <- data_in$X
     corrgram(X, lower.panel=panel.shade, upper.panel=panel.pie,
-         main="Correlation between categories of the benchmarks.")}
+         main="Correlation between categories of the benchmarks.")
+}
 
 
 #' @title fillMissing
