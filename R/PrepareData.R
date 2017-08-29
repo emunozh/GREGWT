@@ -217,6 +217,7 @@ prepareData <- function(census, survey,            # required input data
     Xin <- X
 
     # remove columns of 1 and 0
+    X <- as.data.frame(X)
     Xo  <-  X[colSums(X,na.rm=TRUE)  != 0 & colSums(X,na.rm=TRUE)  != dim(X)[1]]
     Txo <- Tx[colSums(Xt,na.rm=TRUE) != 0 & colSums(Xt,na.rm=TRUE) != dim(Xt)[1]]
     removed.var <- dim(X)[2] - dim(Xo)[2]

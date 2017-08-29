@@ -605,10 +605,10 @@ getLambda <- function(X, dx, Tx, hTx, att_num, use_ginv, verbose=FALSE){
         if(sum(is.na(hTx))) cat("!!hTx contains NaN's!!")
     }
     # A solution for 'A %*% lambda = (Tx - hTx)'
+    if(verbose) cat("\n\t\tlength(Tx): ", length(Tx))
+    if(verbose) cat("\t\tlength(hTx): ",  length(hTx))
     if(use_ginv){
         if(verbose) cat("\n\t\t\tusing ginv ")
-        if(verbose) cat("\n\t\tlength(Tx): ", length(Tx))
-        if(verbose) cat("\t\tlength(hTx): ",  length(hTx))
         require('MASS')
         At <- ginv(A)
         lambda = At %*% (Tx - hTx)
