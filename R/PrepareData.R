@@ -3,6 +3,7 @@
 # 04.02.2015
 # last edit: 20.04.2015
 # Mon 04 Apr 2016 02:16:15 PM CEST
+# Fri 08 Sep 2017
 #
 
 
@@ -105,8 +106,8 @@ prepareData <- function(census, survey,            # required input data
                         ){
     if (verbose){
         cat("preparing data --> ")
-        cat("\ndim(survey):", dim(survey))
-        cat("\ndim(census):", dim(census))
+        cat("\n\t|dim(survey):", dim(survey))
+        cat("\n\t|dim(census):", dim(census))
     }
 
     if (class(group) != "logical"){
@@ -584,7 +585,14 @@ toBinary <- function(X, reference_col=FALSE, use_base=TRUE, verbose=FALSE){
     # Check if variables are categorical data
     var.type <- sapply(X, class)
     X_numeric <- X[var.type == "numeric"]
-    X <- X[var.type == "factor"]
+    X.1 <- X[var.type == "factor"]
+    X.2 <- X[var.type == "character"]
+    if (dim(X.2)[2] >= 1){
+        X.2 <- lapply(X.2, factor)
+        X <- cbind(X.1, X.2)
+    } else {
+        X <- X.1
+    }
 
     if(is.logical(reference_col)){
         if(reference_col){
@@ -604,7 +612,7 @@ toBinary <- function(X, reference_col=FALSE, use_base=TRUE, verbose=FALSE){
                                      use_base=use_base, verbose=verbose)
     }
 
-    for(cn in colnames(X)){colnames(X_out) <- gsub(cn,"",colnames(X_out))}
+    for(cn in colnames(X)){colnames(X_out) <- sub(cn,"",colnames(X_out))}
     # Convert matrix to data frame
     X_out <- as.data.frame(X_out)
     # We don't need the intercept vector
@@ -795,13 +803,13 @@ alignWithTotals <- function(Tx, breaks, pop_totals, pos,
         }else{
             b <- breaks[j+1]
         }
-        if(verbose) cat("\n\t\tfrom: ", i, "\tto: ", b)
+        if(verbose) cat("\n\n\t\tfrom: ", i, "\tto: ", b)
         this_Tx <- Tx[i:b]
         if(verbose) cat("\n\t\tpop_totals: ", sum(pop_totals), "\t")
         if(verbose) cat("sum Tx: ", sum(this_Tx, na.rm=T), "\n")
         if(sum(this_Tx, na.rm=T) != sum(pop_totals)){
             if(verbose){
-                cat("\n\t\t-----------\n")
+                cat("\t\t-----------\n")
                 cat("\t\t---", name ,"---\n")
                 cat("\t\t-----------\n")
                 cat("\t\tbreak ", names(Tx)[i], names(Tx)[b], " num: ", i, b)

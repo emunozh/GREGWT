@@ -1,7 +1,7 @@
 Package: GREGWT
 Type: Package
 Title: Implements the GREGWT algorithm in R.
-Version: 0.7.4
+Version: 0.7.5
 Date: 2016-04-05
 Author: M. Esteban Munoz H.
 Maintainer: M. Esteban Munoz H. <emunozh@gmail.com>
