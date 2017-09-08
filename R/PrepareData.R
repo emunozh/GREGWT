@@ -259,6 +259,7 @@ alignData <- function(Tx, align, breaks, area, verbose=F){
             if (verbose) printBreaks(names(Tx), breaks)
             for(i in seq(dim(align)[2])){
                 vara <- names(align)[i]
+                vara <- sub('.[0-9]', '', vara)
                 sums <- area[vara]
                 if (length(sums) >= 1 && sums != 0){
                     breaks_sum = breaks[align[1,i]:align[2,i]]
